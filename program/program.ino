@@ -1,70 +1,100 @@
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
 #include <SD.h>
+#include <time.h>
 
-unsigned long cas;
-int hodiny, minuty, vteriny;
-long poct;
-unsigned long casSpust;
-unsigned long casAktual;
-int nasDelka = 60000;
-int prestav = 30000;
-bool stav;
+int hours, minutes, seconds;
+long counter, mytime, interval = 5000;
+bool stav = 1;
+int cil = 3;
+int pocetPomodor;
 
-LiquidCrystal_I2C lcd(0x27,20,4);
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-void setup() 
+void setup()
 {
   //Priprava LCDcka
   lcd.init();
   lcd.backlight();
-  lcd.begin(16, 2);                          // put your LCD parameters here
-  lcd.print("Krmeni Lukase: ");
+  mytime = millis() + interval;
 }
 
-void loop() 
+void loop()
 {
-  
+  checkStavu();
 }
 
-int odpocetCasu ()
+void odpocet()
 {
-  //Zobrazuj na LCD uběhnuté millis
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(4, 1);
-  // print the number of seconds since reset:
-  poct = (nasDelka - millis()) / 1000;
-  hodiny = poct / 3600;
-  poct -= (hodiny * 3600);
-  minuty = poct / 60;
-  poct -= (minuty * 60);
-  vteriny = poct;
-  lcd.print(hodiny);
+  lcd.setCursor(1, 1);
+  counter = (mytime - millis()) / 1000;
+  hours = counter / 3600;
+  counter -= (hours * 3600);
+  minutes = counter / 60;
+  counter -= (minutes * 60);
+  seconds = counter;
+  lcd.print(hours);
   lcd.print(":");
-  if (minuty < 10) 
+  if (minutes < 10)
   {
     lcd.print("0");
-    lcd.print(minuty);
+    lcd.print(minutes);
   }
   else
-    lcd.print(minuty);
+    lcd.print(minutes);
   lcd.print(":");
-  if (vteriny < 10) 
-  {
+  if (seconds < 10) {
     lcd.print("0");
-    lcd.print(vteriny);
+    lcd.print(seconds);
   }
   else
-    lcd.print(vteriny);
-
-  if (poct <= millis())
-  {
-    
-  }
+    lcd.print(seconds);
 }
 
-int Prestavka()
+void pomodoro()
 {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Kolik zbyva: ");
+  pocetPomodor++;
+  odpocet();
+}
 
+void prestavka()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Prestavka: ");
+  odpocet();
+}
+
+void konec()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Kusy je kokot");
+}
+
+void checkStavu()
+{
+  if (pocetPomodor >= cil)
+  {
+    konec();
+  }
+  else
+  {
+    if (millis() > mytime)
+    {
+      mytime = millis() + interval;
+      stav = !stav;
+      if (stav == true)
+      {
+        pomodoro();
+      }
+      else
+      {
+        prestavka();
+      }
+    }
+  }
 }
