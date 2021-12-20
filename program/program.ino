@@ -28,16 +28,17 @@ void setup()
 
 void loop()
 {
-  //Serial.println("Loop");
+/*  //Serial.println("Loop");
   //inputUzivatel();
   if (Serial.available() > 0)
   {
     //Serial.println("Check inputu");
     interval = Serial.read()*10000;
-    Serial.flush();
+    Serial.flush();*/
+    interval = Serial.read()*10000;
     pocetPomodor = 0;
     checkStavu();
-  }
+  //}
 }
 
 void odpocet()
