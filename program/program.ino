@@ -4,46 +4,29 @@
 //#include <time.h>
 
 int hours, minutes, seconds;
-long counter, mytime = 5000;
+long counter, interval = 5000;
 bool stav;
 int cil = 3;
-int pocetPomodor;
-int interval;
+int pocetPomodor = 0;
+long mytime;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 void setup()
 {
-  //Serial.println("setup");
   Serial.begin(9600);
   //Priprava LCDcka
   lcd.init();
   lcd.backlight();
-  lcd.setCursor(0,1);
-  Serial.println("Zadej pocet vterin: ");
-  lcd.print("Zadej pocet vterin: ");
-  //mytime = millis() + interval;
-  //checkStavu();
 }
 
 void loop()
 {
-/*  //Serial.println("Loop");
-  //inputUzivatel();
-  if (Serial.available() > 0)
-  {
-    //Serial.println("Check inputu");
-    interval = Serial.read()*10000;
-    Serial.flush();*/
-    interval = Serial.read()*10000;
-    pocetPomodor = 0;
     checkStavu();
-  //}
 }
 
 void odpocet()
 {
-  //Serial.print("Zacatek odpoctu");
   while ( mytime >= millis() )
   {
     lcd.setCursor(1, 1);
@@ -88,10 +71,8 @@ void odpocet()
 
 void pomodoro()
 {
-  //Serial.println("pomodoro");
   lcd.clear();
   lcd.setCursor(0, 0);
-  Serial.println("Kolik zbyva: ");
   lcd.print("Kolik zbyva: ");
   pocetPomodor++;
   odpocet();
@@ -99,7 +80,6 @@ void pomodoro()
 
 void prestavka()
 {
-  //Serial.println("prestavka");
   lcd.clear();
   lcd.setCursor(0, 0);
   Serial.println("Prestavka: ");
@@ -107,26 +87,26 @@ void prestavka()
   odpocet();
 }
 
-void konec()
+int konec()
 {
-  //Serial.println("Konec");
   lcd.clear();
   lcd.setCursor(0, 0);
   Serial.println("Autak je idiot");
   lcd.print("Autak je idiot");
+  delay(1000);
   cil = pocetPomodor + 3;
+  stav = !stav;
 }
 
-void checkStavu()
+int checkStavu()
 {
-  //Serial.println("checkStavu");
   if (pocetPomodor >= cil)
   {
     konec();
   }
   else
   {
-    mytime = millis() + interval;
+    mytime = millis() + interval + 1000;
     stav = !stav;
     if (stav == true)
     {
