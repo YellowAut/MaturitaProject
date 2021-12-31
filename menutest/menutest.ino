@@ -17,9 +17,9 @@ bool menu4_selected = false;
 
 //Defining pins
 //Arduino interrupt pins: 2, 3.
-const int RotaryCLK = PB3; //CLK pin on the rotary encoder
-const int RotaryDT = PB4; //DT pin on the rotary encoder
-const int PushButton = PB5; //Button to enter/exit menu
+const int RotaryCLK = 2; //CLK pin on the rotary encoder
+const int RotaryDT = 3; //DT pin on the rotary encoder
+const int PushButton = 4; //Button to enter/exit menu
 
 //Statuses for the rotary encoder
 int CLKNow;
@@ -33,12 +33,12 @@ bool refreshSelection = false; //refreshes selection (> / X)
 
 void setup() 
 {
-  pinMode(PB3, INPUT_PULLUP); //RotaryCLK
-  pinMode(PB4, INPUT_PULLUP); //RotaryDT
-  pinMode(PB5, INPUT_PULLUP); //Button
+  pinMode(2, INPUT_PULLUP); //RotaryCLK
+  pinMode(3, INPUT_PULLUP); //RotaryDT
+  pinMode(4, INPUT_PULLUP); //Button
 
   //------------------------------------------------------
-  lcd.begin();                      // initialize the lcd   
+  lcd.init();                      // initialize the lcd   
   lcd.backlight();
   //------------------------------------------------------
   lcd.setCursor(0,0); //Defining positon to write from first row, first column .
