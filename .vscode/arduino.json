@@ -1,5 +1,10 @@
 {
     "board": "arduino:avr:uno",
+<<<<<<< Updated upstream
     "sketch": "menutest\\menutest2.ino",
     "port": "COM7"
+=======
+    "sketch": "menutest\\menutest.ino",
+    "port": "COM3"
+>>>>>>> Stashed changes
 }

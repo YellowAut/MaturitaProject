@@ -17,9 +17,15 @@ bool menu4_selected = false;
 
 //Defining pins
 //Arduino interrupt pins: 2, 3.
+<<<<<<< Updated upstream
 const int RotaryCLK = 2; //CLK pin on the rotary encoder
 const int RotaryDT = 3; //DT pin on the rotary encoder
 const int PushButton = 4; //Button to enter/exit menu
+=======
+#define CLK 2
+#define DT 3
+#define SW 12
+>>>>>>> Stashed changes
 
 //Statuses for the rotary encoder
 int CLKNow;
@@ -33,9 +39,15 @@ bool refreshSelection = false; //refreshes selection (> / X)
 
 void setup() 
 {
+<<<<<<< Updated upstream
   pinMode(2, INPUT_PULLUP); //RotaryCLK
   pinMode(3, INPUT_PULLUP); //RotaryDT
   pinMode(4, INPUT_PULLUP); //Button
+=======
+  pinMode(CLK, INPUT); //RotaryCLK
+  pinMode(DT, INPUT); //RotaryDT
+  pinMode(SW, INPUT_PULLUP); //Button
+>>>>>>> Stashed changes
 
   //------------------------------------------------------
   lcd.init();                      // initialize the lcd   
@@ -54,11 +66,11 @@ void setup()
   printLCD(); //print the stationary parts on the screen
   //------------------------------------------------------
   //Store states of the rotary encoder
-  CLKPrevious = digitalRead(RotaryCLK);
-  DTPrevious = digitalRead(RotaryDT);
+  CLKPrevious = digitalRead(CLK);
+  DTPrevious = digitalRead(DT);
       
-  attachInterrupt(digitalPinToInterrupt(RotaryCLK), rotate, CHANGE); //CLK pin is an interrupt pin
-  attachInterrupt(digitalPinToInterrupt(PushButton), pushButton, FALLING); //PushButton pin is an interrupt pin
+  attachInterrupt(digitalPinToInterrupt(CLK), rotate, CHANGE); //CLK pin is an interrupt pin
+  attachInterrupt(digitalPinToInterrupt(SW), pushButton, FALLING); //PushButton pin is an interrupt pin
 
 }
 
@@ -93,13 +105,13 @@ void rotate()
   //-----MENU1--------------------------------------------------------------
   if(menu1_selected == true)
   {
-  CLKNow = digitalRead(RotaryCLK); //Read the state of the CLK pin
+  CLKNow = digitalRead(CLK); //Read the state of the CLK pin
   // If last and current state of CLK are different, then a pulse occurred  
   if (CLKNow != CLKPrevious  && CLKNow == 1)
   {
     // If the DT state is different than the CLK state then
     // the encoder is rotating in A direction, so we increase
-    if (digitalRead(RotaryDT) != CLKNow) 
+    if (digitalRead(DT) != CLKNow) 
     {
       if(menu1_Value < 100) //we do not go above 100
       {
@@ -128,13 +140,13 @@ void rotate()
   //---MENU2---------------------------------------------------------------
   else if(menu2_selected == true)
   {
-    CLKNow = digitalRead(RotaryCLK); //Read the state of the CLK pin
+    CLKNow = digitalRead(CLK); //Read the state of the CLK pin
   // If last and current state of CLK are different, then a pulse occurred  
   if (CLKNow != CLKPrevious  && CLKNow == 1)
   {
     // If the DT state is different than the CLK state then
     // the encoder is rotating in A direction, so we increase
-    if (digitalRead(RotaryDT) != CLKNow) 
+    if (digitalRead(DT) != CLKNow) 
     {
       if(menu2_Value < 100) //we do not go above 100
       {
@@ -163,13 +175,13 @@ void rotate()
   //---MENU3---------------------------------------------------------------
   else if(menu3_selected == true)
   {
-    CLKNow = digitalRead(RotaryCLK); //Read the state of the CLK pin
+    CLKNow = digitalRead(CLK); //Read the state of the CLK pin
   // If last and current state of CLK are different, then a pulse occurred  
   if (CLKNow != CLKPrevious  && CLKNow == 1)
   {
     // If the DT state is different than the CLK state then
     // the encoder is rotating in A direction, so we increase
-    if (digitalRead(RotaryDT) != CLKNow) 
+    if (digitalRead(DT) != CLKNow) 
     {
       if(menu3_Value < 100) //we do not go above 100
       {
@@ -198,13 +210,13 @@ void rotate()
   //---MENU4----------------------------------------------------------------
   else if(menu4_selected == true)
   {
-    CLKNow = digitalRead(RotaryCLK); //Read the state of the CLK pin
+    CLKNow = digitalRead(CLK); //Read the state of the CLK pin
   // If last and current state of CLK are different, then a pulse occurred  
   if (CLKNow != CLKPrevious  && CLKNow == 1)
   {
     // If the DT state is different than the CLK state then
     // the encoder is rotating in A direction, so we increase
-    if (digitalRead(RotaryDT) != CLKNow) 
+    if (digitalRead(DT) != CLKNow) 
     {
       if(menu4_Value < 100) //we do not go above 100
       {
@@ -232,13 +244,13 @@ void rotate()
   }
   else //MENU COUNTER----------------------------------------------------------------------------
   {
-  CLKNow = digitalRead(RotaryCLK); //Read the state of the CLK pin
+  CLKNow = digitalRead(CLK); //Read the state of the CLK pin
   // If last and current state of CLK are different, then a pulse occurred  
   if (CLKNow != CLKPrevious  && CLKNow == 1)
   {
     // If the DT state is different than the CLK state then
     // the encoder is rotating in A direction, so we increase
-    if (digitalRead(RotaryDT) != CLKNow) 
+    if (digitalRead(DT) != CLKNow) 
     {
       if(menuCounter < 3) //we do not go above 3
       {
