@@ -17,15 +17,12 @@ bool menu4_selected = false;
 
 //Defining pins
 //Arduino interrupt pins: 2, 3.
-<<<<<<< Updated upstream
 const int RotaryCLK = 2; //CLK pin on the rotary encoder
 const int RotaryDT = 3; //DT pin on the rotary encoder
 const int PushButton = 4; //Button to enter/exit menu
-=======
 #define CLK 2
 #define DT 3
 #define SW 12
->>>>>>> Stashed changes
 
 //Statuses for the rotary encoder
 int CLKNow;
@@ -39,15 +36,12 @@ bool refreshSelection = false; //refreshes selection (> / X)
 
 void setup() 
 {
-<<<<<<< Updated upstream
   pinMode(2, INPUT_PULLUP); //RotaryCLK
   pinMode(3, INPUT_PULLUP); //RotaryDT
   pinMode(4, INPUT_PULLUP); //Button
-=======
   pinMode(CLK, INPUT); //RotaryCLK
   pinMode(DT, INPUT); //RotaryDT
   pinMode(SW, INPUT_PULLUP); //Button
->>>>>>> Stashed changes
 
   //------------------------------------------------------
   lcd.init();                      // initialize the lcd   
