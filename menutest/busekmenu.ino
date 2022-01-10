@@ -1,8 +1,6 @@
-#include <LiquidCrystal_I2C.h>
-
 #define PIN_BTN_PREV 2
-#define PIN_BTN_ENTER 4
-#define PIN_BTN_NEXT 3
+#define PIN_BTN_ENTER 3
+#define PIN_BTN_NEXT 4
 #define SAMP 100
 
 int id = 0;
@@ -16,8 +14,6 @@ byte btn_prev_click = LOW;
 byte btn_enter_click = LOW;
 byte btn_next_click = LOW;
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
-
 void setup()
 {
     pinMode(PIN_BTN_PREV, INPUT);
@@ -25,11 +21,6 @@ void setup()
     pinMode(PIN_BTN_NEXT, INPUT);
     Serial.begin(9600);
     prev_millis = millis();
-
-    lcd.init();
-    lcd.backlight();
-    lcd.clear();
-
 }
 
 void loop()
@@ -112,7 +103,6 @@ void message(char *msg)
 {
     if (id != prev_id)
     {
-
         Serial.println(msg);
         prev_id = id;
     }
