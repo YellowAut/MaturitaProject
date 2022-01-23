@@ -101,7 +101,7 @@ void loop()
 
 void message(char *msg)
 {
-    if (id != prev_id)
+    if (id != prev_id) //Aby to neblikalo
     {
         Serial.println(msg);
         prev_id = id;

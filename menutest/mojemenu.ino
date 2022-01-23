@@ -112,8 +112,9 @@ void message(char *msg)
 {
     if (id != prev_id)
     {
-
-        Serial.println(msg);
+        lcd.clear();
+        lcd.setCursor(0,1);
+        lcd.print(msg);
         prev_id = id;
     }
 }

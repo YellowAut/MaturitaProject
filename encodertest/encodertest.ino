@@ -10,6 +10,8 @@ int currentStateCLK;
 int lastStateCLK;
 String currentDir ="";
 unsigned long lastButtonPress = 0;
+unsigned long prev_millis;
+byte tick = LOW;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
@@ -18,12 +20,10 @@ void setup() {
   lcd.init();
   lcd.backlight();
 
-  // Set encoder pins as inputs
   pinMode(CLK,INPUT);
   pinMode(DT,INPUT);
   pinMode(SW, INPUT_PULLUP);
 
-  // Setup Serial Monitor
   Serial.begin(9600);
 
   // Read the initial state of CLK
@@ -32,20 +32,17 @@ void setup() {
 
 void loop() {
   
-  // Read the current state of CLK
+  // Čti aktuální stav CLK
   currentStateCLK = digitalRead(CLK);
 
-  // If last and current state of CLK are different, then pulse occurred
-  // React to only 1 state change to avoid double count
-  if (currentStateCLK != lastStateCLK  && currentStateCLK == 1){
+  if (currentStateCLK != lastStateCLK  && currentStateCLK == 1 && tick){
 
-    // If the DT state is different than the CLK state then
-    // the encoder is rotating CCW so decrement
+    // Enkoder se otáčí protisměru hodinových ručiček
     if (digitalRead(DT) != currentStateCLK) {
       counter --;
       currentDir ="CCW";
     } else {
-      // Encoder is rotating CW so increment
+      // Encoder se otáčí po směru hod. ručiček
       counter ++;
       currentDir ="CW";
     }
@@ -57,26 +54,37 @@ void loop() {
     lcd.print(counter);
   }
 
-  // Remember last CLK state
+  // Zapamatuj si poslední směr
   lastStateCLK = currentStateCLK;
 
-  // Read the button state
+  // Čti stav tlačítka
   int btnState = digitalRead(SW);
 
-  //If we detect LOW signal, button is pressed
+  //Když je tlačítko zmáčknuto
   if (btnState == LOW) {
-    //if 50ms have passed since last LOW pulse, it means that the
-    //button has been pressed, released and pressed again
     if (millis() - lastButtonPress > 50) {
       lcd.setCursor(0,3);
       lcd.print("Button pressed!");
       Serial.println("Button pressed!");
     }
 
-    // Remember last button press event
+    // Zapamatovat si kdy bylo tlačítko naposledy stisknuto
     lastButtonPress = millis();
   }
 
-  // Put in a slight delay to help debounce the reading
-  delay(1);
+}
+
+void sampling()
+{
+    unsigned long curr_millis = micros();
+
+    if (curr_millis - prev_millis >= 1000)
+    {
+        tick = HIGH;
+        prev_millis = curr_millis;
+    }
+    else
+    {
+        tick = LOW;
+    }
 }
