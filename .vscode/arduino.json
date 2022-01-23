@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "menutest\\busekmenu\\busekmenu.ino",
+    "sketch": "menutest\\mojemenu.ino",
     "port": "COM3",
     "programmer": "arduino:avrispmkii"
 }
