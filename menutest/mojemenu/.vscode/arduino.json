@@ -1,6 +1,4 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "program0.0\\program.ino",
-    "port": "COM3",
     "programmer": "arduino:avrispmkii"
 }
