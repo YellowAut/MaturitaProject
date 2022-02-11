@@ -118,9 +118,13 @@ void text(char *msg)
     if ( id != prev_id)
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print(text);
+=======
+        Serial.println(msg);
+>>>>>>> parent of dc5eb6f (Pridani funkce)
 =======
         Serial.println(msg);
 >>>>>>> parent of dc5eb6f (Pridani funkce)
@@ -175,6 +179,7 @@ void encoder()
     {
         enter = LOW;
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 }
 
@@ -272,6 +277,8 @@ int checkStavu()
             prestavka();
         }
     }
+=======
+>>>>>>> parent of dc5eb6f (Pridani funkce)
 =======
 >>>>>>> parent of dc5eb6f (Pridani funkce)
 }
