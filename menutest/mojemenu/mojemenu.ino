@@ -67,10 +67,10 @@ void loop()
         if (menu_dolu)
             id = 0;
         if (enter)
-            id = 10;
+            checkStavu();
         break;
     case 2:
-        text("Menu 2");
+        text("Nastaveni");
         if (menu_nahoru)
             id = 3;
         if (menu_dolu)
@@ -135,7 +135,9 @@ void text(String text)
 {
     if (id != prev_id)
     {
-        Serial.println(text);
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print(text);
         prev_id = id;
     }
 }
@@ -256,11 +258,12 @@ int konec()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    Serial.println("Autak je idiot");
-    lcd.print("Autak je idiot");
+    Serial.println("Konec pomodora");
+    lcd.print("Konec pomodora");
     delay(1000);
     cil = pocetPomodor + 3;
     stav = !stav;
+    id = 0;
 }
 
 int checkStavu()
