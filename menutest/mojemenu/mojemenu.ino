@@ -1,7 +1,11 @@
+#include <LiquidCrystal_I2C.h>
+
 #define CLK 2
 #define SW 3
 #define DT 4
 #define SAMP 100
+
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 int id;
 int prev_id = -1;
@@ -15,6 +19,13 @@ byte menu_nahoru = LOW;
 byte menu_dolu = LOW;
 byte enter = LOW;
 
+int hours, minutes, seconds;
+long counter, interval = 5000;
+bool stav;
+int cil = 3;
+int pocetPomodor = 0;
+long mytime;
+
 void setup()
 {
     pinMode(CLK, INPUT);
@@ -25,6 +36,13 @@ void setup()
     prev_millis = millis();
 
     predchEncoder = digitalRead(CLK);
+
+    lcd.init();
+    lcd.backlight();
+    lcd.setCursor(0, 0);
+    lcd.print("POMODORO");
+    delay(5000);
+    lcd.clear();
 }
 
 void loop()
@@ -33,7 +51,7 @@ void loop()
 
     encoder();
 
-    switch(id)
+    switch (id)
     {
     case 0:
         text("Main Menu");
@@ -43,7 +61,7 @@ void loop()
             id = 3;
         break;
     case 1:
-        text("Menu 1");
+        text("Pomodoro");
         if (menu_nahoru)
             id = 2;
         if (menu_dolu)
@@ -113,21 +131,13 @@ void loop()
     }
 }
 
-void text(char *msg)
+void text(String text)
 {
-    if ( id != prev_id)
+    if (id != prev_id)
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print(text);
-=======
-        Serial.println(msg);
->>>>>>> parent of dc5eb6f (Pridani funkce)
-=======
-        Serial.println(msg);
->>>>>>> parent of dc5eb6f (Pridani funkce)
         prev_id = id;
     }
 }
@@ -135,7 +145,7 @@ void text(char *msg)
 void sampling()
 {
     unsigned long curr_millis = micros();
-    
+
     if (curr_millis - prev_millis >= SAMP)
     {
         tick = HIGH;
@@ -151,7 +161,7 @@ void encoder()
 {
     aktualEncoder = digitalRead(CLK);
 
-    if( aktualEncoder == 1 && aktualEncoder != predchEncoder)
+    if (aktualEncoder == 1 && aktualEncoder != predchEncoder)
     {
         if (digitalRead(DT) != aktualEncoder)
         {
@@ -171,7 +181,7 @@ void encoder()
 
     int stavTlac = digitalRead(SW);
 
-    if(stavTlac == LOW)
+    if (stavTlac == LOW)
     {
         enter = HIGH;
     }
@@ -179,8 +189,6 @@ void encoder()
     {
         enter = LOW;
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
 
 void odpocet()
@@ -277,8 +285,4 @@ int checkStavu()
             prestavka();
         }
     }
-=======
->>>>>>> parent of dc5eb6f (Pridani funkce)
-=======
->>>>>>> parent of dc5eb6f (Pridani funkce)
 }
