@@ -1,6 +1,10 @@
 {
     "board": "arduino:avr:uno",
+<<<<<<< HEAD
     "sketch": "menutest\\mojemenu\\mojemenu.ino",
+=======
+    "sketch": "menutest\\mojemenu.ino",
+>>>>>>> parent of dc5eb6f (Pridani funkce)
     "port": "COM3",
     "programmer": "arduino:avrispmkii"
 }
