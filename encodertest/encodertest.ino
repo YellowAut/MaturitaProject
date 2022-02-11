@@ -72,19 +72,5 @@ void loop() {
     lastButtonPress = millis();
   }
 
-}
-
-void sampling()
-{
-    unsigned long curr_millis = micros();
-
-    if (curr_millis - prev_millis >= 1000)
-    {
-        tick = HIGH;
-        prev_millis = curr_millis;
-    }
-    else
-    {
-        tick = LOW;
-    }
+  delay(1);
 }

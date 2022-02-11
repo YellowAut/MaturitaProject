@@ -15,6 +15,7 @@ byte tick = LOW;
 unsigned long prev_tlac;
 int aktualEncoder;
 int predchEncoder;
+int stavTlac;
 
 byte menu_nahoru = LOW;
 byte menu_dolu = LOW;
@@ -30,7 +31,7 @@ long mytime;
 void setup()
 {
     pinMode(CLK, INPUT);
-    pinMode(SW, INPUT);
+    pinMode(SW, INPUT_PULLUP);
     pinMode(DT, INPUT);
 
     Serial.begin(9600);
@@ -48,6 +49,7 @@ void setup()
 
 void loop()
 {
+    Serial.println("Zacatek loopu");
     sampling();
 
     encoder();
@@ -55,14 +57,14 @@ void loop()
     switch (id)
     {
     case 0:
-        text("Main Menu");
+        text("> Main Menu");
         if (menu_nahoru)
             id = 1;
         if (menu_dolu)
             id = 4;
         break;
     case 1:
-        text("Pomodoro");
+        text("> Pomodoro");
         if (menu_nahoru)
             id = 2;
         if (menu_dolu)
@@ -71,7 +73,7 @@ void loop()
         //    checkStavu();
         break;
     case 2:
-        text("Nastaveni");
+        text("> Nastaveni");
         if (menu_nahoru)
             id = 3;
         if (menu_dolu)
@@ -80,7 +82,7 @@ void loop()
             id = 20;
         break;
     case 3:
-        text("Menu 3");
+        text("> Menu 3");
         if (menu_nahoru)
             id = 4;
         if (menu_dolu)
@@ -89,7 +91,7 @@ void loop()
             id = 30;
         break;
     case 4:
-        text("Menu 4");
+        text("> Menu 4");
         if (menu_nahoru)
             id = 0;
         if (menu_dolu)
@@ -98,21 +100,21 @@ void loop()
             id = 40;
         break;
     case 10:
-        text("Menu 10");
+        text("> Menu 10");
         if (menu_nahoru)
             id = 11;
         if (menu_dolu)
             id = 12;
         break;
     case 11:
-        text("Menu 11");
+        text("> Menu 11");
         if (menu_nahoru)
             id = 12;
         if (menu_dolu)
             id = 10;
         break;
     case 12:
-        text("Menu 12");
+        text("> Menu 12");
         if (menu_nahoru)
             id = 13;
         if (menu_dolu)
@@ -121,7 +123,7 @@ void loop()
             id = 1;
         break;
     case 13:
-        text("Exit");
+        text("> Exit");
         if (menu_nahoru)
             id = 14;
         if (menu_dolu)
@@ -130,6 +132,7 @@ void loop()
             id = 1;
         break;
     }
+    Serial.println("Konec loopu");
 }
 
 void text(String text)
@@ -139,14 +142,16 @@ void text(String text)
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print(text);
-        Serial.println(text);
+        Serial.println("zmena textu");
         prev_id = id;
+
         Serial.println(id);
     }
 }
 
 void sampling()
 {
+    Serial.println("Sampling");
     unsigned long curr_millis = micros();
 
     if (curr_millis - prev_millis >= SAMP)
@@ -162,10 +167,12 @@ void sampling()
 
 void encoder()
 {
+    Serial.println("Kontrola stavu encoderu");
     aktualEncoder = digitalRead(CLK);
 
     if (aktualEncoder == 1 && aktualEncoder != predchEncoder)
     {
+        Serial.println("Jakym smerem se encoder pohnul");
         if (digitalRead(DT) != aktualEncoder)
         {
             menu_nahoru = HIGH;
@@ -177,17 +184,9 @@ void encoder()
             Serial.println("Menu dolu");
         }
     }
-    else
+    else if (stavTlac == LOW)
     {
-        menu_dolu = LOW;
-        menu_nahoru = LOW;
-    }
-    predchEncoder = aktualEncoder;
-
-    int stavTlac = digitalRead(SW);
-
-    if (stavTlac == LOW)
-    {
+        Serial.println("Tlacitko zmacknuto...");
         if (millis() - prev_tlac > 50)
         {
             enter = HIGH;
@@ -197,102 +196,10 @@ void encoder()
     }
     else
     {
+        Serial.println("Vsechno low");
+        menu_dolu = LOW;
+        menu_nahoru = LOW;
         enter = LOW;
     }
-}
-
-void odpocet()
-{
-    while (mytime >= millis())
-    {
-        lcd.setCursor(1, 1);
-        counter = (mytime - millis()) / 1000;
-        hours = counter / 3600;
-        counter -= (hours * 3600);
-        minutes = counter / 60;
-        counter -= (minutes * 60);
-        seconds = counter;
-        Serial.print(hours);
-        lcd.print(hours);
-        Serial.print(":");
-        lcd.print(":");
-        if (minutes < 10)
-        {
-            Serial.print("0");
-            Serial.print(minutes);
-            lcd.print("0");
-            lcd.print(minutes);
-        }
-        else
-        {
-            Serial.print(minutes);
-            lcd.print(minutes);
-        }
-        Serial.print(":");
-        lcd.print(":");
-        if (seconds < 10)
-        {
-            Serial.print("0");
-            Serial.println(seconds);
-            lcd.print("0");
-            lcd.print(seconds);
-        }
-        else
-        {
-            Serial.println(seconds);
-            lcd.print(seconds);
-        }
-    }
-    checkStavu();
-}
-
-void pomodoro()
-{
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Kolik zbyva: ");
-    pocetPomodor++;
-    odpocet();
-}
-
-void prestavka()
-{
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    Serial.println("Prestavka: ");
-    lcd.print("Prestavka: ");
-    odpocet();
-}
-
-int konec()
-{
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    Serial.println("Konec pomodora");
-    lcd.print("Konec pomodora");
-    delay(1000);
-    cil = pocetPomodor + 3;
-    stav = !stav;
-    id = 0;
-}
-
-int checkStavu()
-{
-    if (pocetPomodor >= cil)
-    {
-        konec();
-    }
-    else
-    {
-        mytime = millis() + interval + 1000;
-        stav = !stav;
-        if (stav == true)
-        {
-            pomodoro();
-        }
-        else if (stav == false)
-        {
-            prestavka();
-        }
-    }
+    predchEncoder = aktualEncoder;
 }
