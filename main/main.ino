@@ -20,7 +20,6 @@ int stavTlac;
 byte menu_nahoru = LOW;
 byte menu_dolu = LOW;
 byte enter = LOW;
-int zmacknuti;
 
 int hours, minutes, seconds;
 long counter, interval = 5000;
@@ -50,15 +49,11 @@ void setup()
 
 void loop()
 {
+    Serial.println("Zacatek loopu");
     sampling();
 
     encoder();
-    //Digital read na tlacitko high/low, if digital read tohzo pinu == low, zmacknuto, promenna se nastavi na stavtlac na high, bla bla, pak to prepsat na low
-    zmacknuti = digitalRead(SW);
-    if (zmacknuti == LOW)
-    {
-        stavTlac = LOW;
-    }
+
     switch (id)
     {
     case 0:
@@ -74,8 +69,8 @@ void loop()
             id = 2;
         if (menu_dolu)
             id = 0;
-        if (enter)
-            id = 10;
+        //if (enter)
+        //    checkStavu();
         break;
     case 2:
         text("> Nastaveni");
@@ -137,6 +132,7 @@ void loop()
             id = 1;
         break;
     }
+    Serial.println("Konec loopu");
 }
 
 void text(String text)
@@ -146,6 +142,7 @@ void text(String text)
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print(text);
+        Serial.println("zmena textu");
         prev_id = id;
 
         Serial.println(id);
@@ -154,6 +151,7 @@ void text(String text)
 
 void sampling()
 {
+    Serial.println("Sampling");
     unsigned long curr_millis = micros();
 
     if (curr_millis - prev_millis >= SAMP)
@@ -169,31 +167,36 @@ void sampling()
 
 void encoder()
 {
+    Serial.println("Kontrola stavu encoderu");
     aktualEncoder = digitalRead(CLK);
 
     if (aktualEncoder == 1 && aktualEncoder != predchEncoder)
     {
+        Serial.println("Jakym smerem se encoder pohnul");
         if (digitalRead(DT) != aktualEncoder)
         {
             menu_nahoru = HIGH;
+            Serial.println("Menu nahoru");
         }
         else
         {
             menu_dolu = HIGH;
+            Serial.println("Menu dolu");
         }
     }
     else if (stavTlac == LOW)
     {
+        Serial.println("Tlacitko zmacknuto...");
         if (millis() - prev_tlac > 50)
         {
             enter = HIGH;
             Serial.println("Tlacitko zmacknuto");
-            stavTlac = HIGH;
         }
         prev_tlac = millis();
     }
     else
     {
+        Serial.println("Vsechno low");
         menu_dolu = LOW;
         menu_nahoru = LOW;
         enter = LOW;
