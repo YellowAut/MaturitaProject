@@ -50,8 +50,6 @@ void setup()
 
 void loop()
 {
-    Serial.println(zmacknuti);
-    Serial.println(enter);
     sampling();
 
     encoder();
@@ -59,7 +57,6 @@ void loop()
     zmacknuti = digitalRead(SW);
     if (zmacknuti == LOW)
     {
-        Serial.println("Fyzicke tlacitko zmacknuto");
         stavTlac = LOW;
     }
     switch (id)
@@ -190,14 +187,13 @@ void encoder()
         if (millis() - prev_tlac > 50)
         {
             enter = HIGH;
-            Serial.println("Enter high");
+            Serial.println("Tlacitko zmacknuto");
             stavTlac = HIGH;
         }
         prev_tlac = millis();
     }
     else
     {
-        Serial.println("Hodnoty low");
         menu_dolu = LOW;
         menu_nahoru = LOW;
         enter = LOW;
