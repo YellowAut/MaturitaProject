@@ -1,4 +1,5 @@
 #include <LiquidCrystal_I2C.h>
+#include <EEPROM.h>
 
 #define CLK 2
 #define DT 3
@@ -7,21 +8,25 @@
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
+// Menu
 int id;
 int prev_id = -1;
 unsigned long prev_millis;
 byte tick = LOW;
 
+// Encoder
 unsigned long prev_tlac;
 int aktualEncoder;
 int predchEncoder;
 int stavTlac;
 
+// menu pohyb
 byte menu_nahoru = LOW;
 byte menu_dolu = LOW;
 byte enter = LOW;
 int zmacknuti;
 
+// Pomodoro
 int hours, minutes, seconds;
 long counter, interval = 5000;
 bool stav;
@@ -50,15 +55,17 @@ void setup()
 
 void loop()
 {
-    sampling();
-
-    encoder();
-    //Digital read na tlacitko high/low, if digital read tohzo pinu == low, zmacknuto, promenna se nastavi na stavtlac na high, bla bla, pak to prepsat na low
+    // Digital read na tlacitko high/low, if digital read tohzo pinu == low, zmacknuto, promenna se nastavi na stavtlac na high, bla bla, pak to prepsat na low
     zmacknuti = digitalRead(SW);
     if (zmacknuti == LOW)
     {
         stavTlac = LOW;
     }
+
+    sampling();
+
+    encoder();
+
     switch (id)
     {
     case 0:
@@ -75,7 +82,7 @@ void loop()
         if (menu_dolu)
             id = 0;
         if (enter)
-            id = 10;
+            checkStavu();
         break;
     case 2:
         text("> Nastaveni");
@@ -144,7 +151,7 @@ void text(String text)
     if (id != prev_id)
     {
         lcd.clear();
-        lcd.setCursor(0,0);
+        lcd.setCursor(0, 0);
         lcd.print(text);
         prev_id = id;
 
@@ -199,4 +206,99 @@ void encoder()
         enter = LOW;
     }
     predchEncoder = aktualEncoder;
+}
+
+void odpocet()
+{
+    while (mytime >= millis())
+    {
+        lcd.setCursor(1, 1);
+        counter = (mytime - millis()) / 1000;
+        hours = counter / 3600;
+        counter -= (hours * 3600);
+        minutes = counter / 60;
+        counter -= (minutes * 60);
+        seconds = counter;
+        Serial.print(hours);
+        lcd.print(hours);
+        Serial.print(":");
+        lcd.print(":");
+        if (minutes < 10)
+        {
+            Serial.print("0");
+            Serial.print(minutes);
+            lcd.print("0");
+            lcd.print(minutes);
+        }
+        else
+        {
+            Serial.print(minutes);
+            lcd.print(minutes);
+        }
+        Serial.print(":");
+        lcd.print(":");
+        if (seconds < 10)
+        {
+            Serial.print("0");
+            Serial.println(seconds);
+            lcd.print("0");
+            lcd.print(seconds);
+        }
+        else
+        {
+            Serial.println(seconds);
+            lcd.print(seconds);
+        }
+    }
+    checkStavu();
+}
+
+void pomodoro()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Kolik zbyva: ");
+    pocetPomodor++;
+    odpocet();
+}
+
+void prestavka()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    Serial.println("Prestavka: ");
+    lcd.print("Prestavka: ");
+    odpocet();
+}
+
+int konec()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    Serial.println("Autak je idiot");
+    lcd.print("Autak je idiot");
+    delay(1000);
+    cil = pocetPomodor + 3;
+    stav = !stav;
+}
+
+int checkStavu()
+{
+    if (pocetPomodor >= cil)
+    {
+        konec();
+    }
+    else
+    {
+        mytime = millis() + interval + 1000;
+        stav = !stav;
+        if (stav == true)
+        {
+            pomodoro();
+        }
+        else if (stav == false)
+        {
+            prestavka();
+        }
+    }
 }
