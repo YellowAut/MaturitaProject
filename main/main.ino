@@ -1,5 +1,4 @@
 #include <LiquidCrystal_I2C.h>
-#include <EEPROM.h>
 
 #define CLK 2
 #define DT 3
@@ -15,23 +14,23 @@ unsigned long prev_millis;
 byte tick = LOW;
 
 // Encoder
-unsigned long prev_tlac;
-int aktualEncoder;
-int predchEncoder;
-int stavTlac;
+unsigned long prevButton;
+int actuEnc;
+int prevEnc;
+byte stateButton = HIGH;
 
 // menu pohyb
-byte menu_nahoru = LOW;
-byte menu_dolu = LOW;
+byte encUp = LOW;
+byte encDown = LOW;
 byte enter = LOW;
-int zmacknuti;
+byte press;
 
 // Pomodoro
 int hours, minutes, seconds;
 long counter, interval = 5000;
-bool stav;
-int cil = 3;
-int pocetPomodor = 0;
+byte state;
+int target = 3;
+int numPomodoro = 0;
 long mytime;
 
 void setup()
@@ -43,125 +42,124 @@ void setup()
     Serial.begin(9600);
     prev_millis = millis();
 
-    predchEncoder = digitalRead(CLK);
+    prevEnc = digitalRead(CLK);
 
     lcd.init();
     lcd.backlight();
-    lcd.setCursor(0, 0);
+/*    lcd.setCursor(0, 0);
     lcd.print("POMODORO");
     delay(5000);
-    lcd.clear();
+    lcd.clear();*/
 }
 
 void loop()
 {
-    // Digital read na tlacitko high/low, if digital read tohzo pinu == low, zmacknuto, promenna se nastavi na stavtlac na high, bla bla, pak to prepsat na low
-    zmacknuti = digitalRead(SW);
-    if (zmacknuti == LOW)
-    {
-        stavTlac = LOW;
-    }
-
-    sampling();
 
     encoder();
+
+    sampling();
 
     switch (id)
     {
     case 0:
-        text("> Main Menu");
-        if (menu_nahoru)
+        menu("> Main Menu");
+        if (encUp)
             id = 1;
-        if (menu_dolu)
+        if (encDown)
             id = 4;
         break;
     case 1:
-        text("> Pomodoro");
-        if (menu_nahoru)
+        menu("> Pomodoro");
+        if (encUp)
             id = 2;
-        if (menu_dolu)
+        if (encDown)
             id = 0;
         if (enter)
             checkStavu();
         break;
     case 2:
-        text("> Nastaveni");
-        if (menu_nahoru)
+        menu("> Nastaveni");
+        if (encUp)
             id = 3;
-        if (menu_dolu)
+        if (encDown)
             id = 1;
         if (enter)
             id = 20;
         break;
     case 3:
-        text("> Menu 3");
-        if (menu_nahoru)
+        menu("> Menu 3");
+        if (encUp)
             id = 4;
-        if (menu_dolu)
+        if (encDown)
             id = 2;
         if (enter)
             id = 30;
         break;
     case 4:
-        text("> Menu 4");
-        if (menu_nahoru)
+        menu("> Menu 4");
+        if (encUp)
             id = 0;
-        if (menu_dolu)
+        if (encDown)
             id = 3;
         if (enter)
             id = 40;
         break;
-    case 10:
-        text("> Menu 10");
-        if (menu_nahoru)
-            id = 11;
-        if (menu_dolu)
-            id = 12;
+    case 20:
+        menu("> Pocet pomodor");
+        if (encUp)
+            id = 21;
+        if (encDown)
+            id = 23;
+        if (enter)
+            id = 201;
         break;
-    case 11:
-        text("> Menu 11");
-        if (menu_nahoru)
-            id = 12;
-        if (menu_dolu)
-            id = 10;
+    case 21:
+        menu("> Delka pomodora");
+        if (encUp)
+            id = 22;
+        if (encDown)
+            id = 20;
+        if (enter)
+            id = 110;
         break;
-    case 12:
-        text("> Menu 12");
-        if (menu_nahoru)
-            id = 13;
-        if (menu_dolu)
-            id = 11;
+    case 22:
+        menu("> Delka prestavky");
+        if (encUp)
+            id = 23;
+        if (encDown)
+            id = 21;
+        if (enter)
+            id = 101;
+        break;
+    case 23:
+        menu("> Exit");
+        if (encUp)
+            id = 20;
+        if (encDown)
+            id = 22;
         if (enter)
             id = 1;
         break;
-    case 13:
-        text("> Exit");
-        if (menu_nahoru)
-            id = 14;
-        if (menu_dolu)
-            id = 12;
-        if (enter)
-            id = 1;
-        break;
+    case 201:
+        pomodoroSettings();
     }
 }
 
-void text(String text)
+void menu(String text)
 {
     if (id != prev_id)
     {
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print(text);
-        prev_id = id;
-
         Serial.println(id);
+        prev_id = id;
     }
 }
 
 void sampling()
 {
-    unsigned long curr_millis = micros();
+    unsigned long curr_millis = millis();
 
     if (curr_millis - prev_millis >= SAMP)
     {
@@ -174,38 +172,47 @@ void sampling()
     }
 }
 
+void reset()
+{
+    encUp = LOW;
+    encDown = LOW;
+    enter = LOW;
+    stateButton = HIGH;
+    press = HIGH;
+}
+
 void encoder()
 {
-    aktualEncoder = digitalRead(CLK);
+    reset();
 
-    if (aktualEncoder == 1 && aktualEncoder != predchEncoder)
+    press = digitalRead(SW);
+    if (press == LOW)
     {
-        if (digitalRead(DT) != aktualEncoder)
+        stateButton = LOW;
+    }
+
+    actuEnc = digitalRead(CLK);
+    if (actuEnc == 1 && actuEnc != prevEnc)
+    {
+        if (digitalRead(DT) != actuEnc)
         {
-            menu_nahoru = HIGH;
+            encUp = HIGH;
         }
         else
         {
-            menu_dolu = HIGH;
+            encDown = HIGH;
         }
     }
-    else if (stavTlac == LOW)
+    else if (stateButton == LOW)
     {
-        if (millis() - prev_tlac > 50)
+        if (millis() - prevButton > 1000)
         {
             enter = HIGH;
             Serial.println("Tlacitko zmacknuto");
-            stavTlac = HIGH;
         }
-        prev_tlac = millis();
+        prevButton = millis();
     }
-    else
-    {
-        menu_dolu = LOW;
-        menu_nahoru = LOW;
-        enter = LOW;
-    }
-    predchEncoder = aktualEncoder;
+    prevEnc = actuEnc;
 }
 
 void odpocet()
@@ -219,34 +226,34 @@ void odpocet()
         minutes = counter / 60;
         counter -= (minutes * 60);
         seconds = counter;
-        Serial.print(hours);
+//        Serial.print(hours);
         lcd.print(hours);
-        Serial.print(":");
+//        Serial.print(":");
         lcd.print(":");
         if (minutes < 10)
         {
-            Serial.print("0");
-            Serial.print(minutes);
+//            Serial.print("0");
+//            Serial.print(minutes);
             lcd.print("0");
             lcd.print(minutes);
         }
         else
         {
-            Serial.print(minutes);
+//            Serial.print(minutes);
             lcd.print(minutes);
         }
-        Serial.print(":");
+//        Serial.print(":");
         lcd.print(":");
         if (seconds < 10)
         {
-            Serial.print("0");
-            Serial.println(seconds);
+//            Serial.print("0");
+//            Serial.println(seconds);
             lcd.print("0");
             lcd.print(seconds);
         }
         else
         {
-            Serial.println(seconds);
+//            Serial.println(seconds);
             lcd.print(seconds);
         }
     }
@@ -258,11 +265,11 @@ void pomodoro()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Kolik zbyva: ");
-    pocetPomodor++;
+    numPomodoro++;
     odpocet();
 }
 
-void prestavka()
+void pause()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -271,34 +278,101 @@ void prestavka()
     odpocet();
 }
 
-int konec()
+int end()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    Serial.println("Autak je idiot");
-    lcd.print("Autak je idiot");
+    Serial.println("Ende");
+    lcd.print("Ende");
     delay(1000);
-    cil = pocetPomodor + 3;
-    stav = !stav;
+    
+    numPomodoro = 0;
+    state = !state;
+    id = 0;
 }
 
 int checkStavu()
 {
-    if (pocetPomodor >= cil)
+    if (numPomodoro >= target)
     {
-        konec();
+        end();
     }
     else
     {
         mytime = millis() + interval + 1000;
-        stav = !stav;
-        if (stav == true)
+        state = !state;
+        if (state == true)
         {
             pomodoro();
         }
-        else if (stav == false)
+        else if (state == false)
         {
-            prestavka();
+            pause();
         }
     }
+}
+
+int timeSettings()
+{
+    if (id == 110)
+    {
+        
+    }
+    else if (id == 101)
+    {
+        
+    }
+}
+
+int pomodoroSettings()
+{
+    Serial.println("pomodoroSettings");
+    int newTarget = 1;
+    int prevTarget;
+    lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print("Puvodni pocet: ");
+    lcd.print(target);
+    lcd.setCursor(0,2);
+    lcd.print("Aktualni pocet: ");
+    while (true)
+    {
+        press = digitalRead(SW);
+        if (press == LOW)
+        {
+            stateButton = LOW;
+        }
+
+        encoder();
+
+        if (encUp == HIGH)
+        {
+            newTarget++;
+            Serial.println("Target +");
+        }
+        else if(encDown == HIGH)
+        {
+            newTarget--;
+            Serial.println("Target -");
+        }
+        else if(enter == HIGH)
+        {
+            Serial.println("enter");
+            target = newTarget;
+            id = 20;
+            Serial.println(id);
+            break;
+        }
+
+        if (newTarget != prevTarget)
+        {
+            prevTarget = newTarget;
+            Serial.println("Prepis pocet na lcd");
+            lcd.setCursor(16,2);
+            lcd.print("   ");
+            lcd.setCursor(16,2);
+            lcd.print(newTarget);
+        }
+    }
+    Serial.println("Pryc z while loopu");
 }

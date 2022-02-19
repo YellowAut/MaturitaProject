@@ -12,19 +12,19 @@ int prev_id = -1;
 unsigned long prev_millis;
 byte tick = LOW;
 
-unsigned long prev_tlac;
-int aktualEncoder;
-int predchEncoder;
+unsigned long prevButton;
+int actuEnc;
+int prevEnc;
 
-byte menu_nahoru = LOW;
-byte menu_dolu = LOW;
+byte encUp = LOW;
+byte encDown = LOW;
 byte enter = LOW;
 
 int hours, minutes, seconds;
 long counter, interval = 5000;
 bool stav;
-int cil = 3;
-int pocetPomodor = 0;
+int target = 3;
+int numPomodoro = 0;
 long mytime;
 
 void setup()
@@ -36,7 +36,7 @@ void setup()
     Serial.begin(9600);
     prev_millis = millis();
 
-    predchEncoder = digitalRead(CLK);
+    prevEnc = digitalRead(CLK);
 
     lcd.init();
     lcd.backlight();
@@ -56,75 +56,75 @@ void loop()
     {
     case 0:
         text("Main Menu");
-        if (menu_nahoru)
+        if (encUp)
             id = 1;
-        if (menu_dolu)
+        if (encDown)
             id = 4;
         break;
     case 1:
         text("Pomodoro");
-        if (menu_nahoru)
+        if (encUp)
             id = 2;
-        if (menu_dolu)
+        if (encDown)
             id = 0;
         //if (enter)
         //    checkStavu();
         break;
     case 2:
         text("Nastaveni");
-        if (menu_nahoru)
+        if (encUp)
             id = 3;
-        if (menu_dolu)
+        if (encDown)
             id = 1;
         if (enter)
             id = 20;
         break;
     case 3:
         text("Menu 3");
-        if (menu_nahoru)
+        if (encUp)
             id = 4;
-        if (menu_dolu)
+        if (encDown)
             id = 2;
         if (enter)
             id = 30;
         break;
     case 4:
         text("Menu 4");
-        if (menu_nahoru)
+        if (encUp)
             id = 0;
-        if (menu_dolu)
+        if (encDown)
             id = 3;
         if (enter)
             id = 40;
         break;
     case 10:
         text("Menu 10");
-        if (menu_nahoru)
+        if (encUp)
             id = 11;
-        if (menu_dolu)
+        if (encDown)
             id = 12;
         break;
     case 11:
         text("Menu 11");
-        if (menu_nahoru)
+        if (encUp)
             id = 12;
-        if (menu_dolu)
+        if (encDown)
             id = 10;
         break;
     case 12:
         text("Menu 12");
-        if (menu_nahoru)
+        if (encUp)
             id = 13;
-        if (menu_dolu)
+        if (encDown)
             id = 11;
         if (enter)
             id = 1;
         break;
     case 13:
         text("Exit");
-        if (menu_nahoru)
+        if (encUp)
             id = 14;
-        if (menu_dolu)
+        if (encDown)
             id = 12;
         if (enter)
             id = 1;
@@ -162,38 +162,38 @@ void sampling()
 
 void encoder()
 {
-    aktualEncoder = digitalRead(CLK);
+    actuEnc = digitalRead(CLK);
 
-    if (aktualEncoder == 1 && aktualEncoder != predchEncoder)
+    if (actuEnc == 1 && actuEnc != prevEnc)
     {
-        if (digitalRead(DT) != aktualEncoder)
+        if (digitalRead(DT) != actuEnc)
         {
-            menu_nahoru = HIGH;
+            encUp = HIGH;
             Serial.println("Menu nahoru");
         }
         else
         {
-            menu_dolu = HIGH;
+            encDown = HIGH;
             Serial.println("Menu dolu");
         }
     }
     else
     {
-        menu_dolu = LOW;
-        menu_nahoru = LOW;
+        encDown = LOW;
+        encUp = LOW;
     }
-    predchEncoder = aktualEncoder;
+    prevEnc = actuEnc;
 
     int stavTlac = digitalRead(SW);
 
     if (stavTlac == LOW)
     {
-        if (millis() - prev_tlac > 50)
+        if (millis() - prevButton > 50)
         {
             enter = HIGH;
             Serial.println("Tlacitko zmacknuto");
         }
-        prev_tlac = millis();
+        prevButton = millis();
     }
     else
     {
@@ -251,7 +251,7 @@ void pomodoro()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Kolik zbyva: ");
-    pocetPomodor++;
+    numPomodoro++;
     odpocet();
 }
 
@@ -271,14 +271,14 @@ int konec()
     Serial.println("Konec pomodora");
     lcd.print("Konec pomodora");
     delay(1000);
-    cil = pocetPomodor + 3;
+    target = numPomodoro + 3;
     stav = !stav;
     id = 0;
 }
 
 int checkStavu()
 {
-    if (pocetPomodor >= cil)
+    if (numPomodoro >= target)
     {
         konec();
     }

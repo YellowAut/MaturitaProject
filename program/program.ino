@@ -6,8 +6,8 @@
 int hours, minutes, seconds;
 long counter, interval = 5000;
 bool stav;
-int cil = 3;
-int pocetPomodor = 0;
+int target = 3;
+int numPomodoro = 0;
 long mytime;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -74,7 +74,7 @@ void pomodoro()
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Kolik zbyva: ");
-  pocetPomodor++;
+  numPomodoro++;
   odpocet();
 }
 
@@ -94,13 +94,13 @@ int konec()
   Serial.println("Autak je idiot");
   lcd.print("Autak je idiot");
   delay(1000);
-  cil = pocetPomodor + 3;
+  target = numPomodoro + 3;
   stav = !stav;
 }
 
 int checkStavu()
 {
-  if (pocetPomodor >= cil)
+  if (numPomodoro >= target)
   {
     konec();
   }

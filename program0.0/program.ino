@@ -67,7 +67,7 @@ void pomodoro()
   odpocet();
 }
 
-void prestavka()
+void pause()
 {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -98,7 +98,7 @@ void checkStavu()
     }
     else if (stav == false)
     {
-      prestavka();
+      pause();
     }
   }
 }
