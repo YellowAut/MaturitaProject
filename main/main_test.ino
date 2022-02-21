@@ -1,5 +1,4 @@
 #include <LiquidCrystal_I2C.h>
-#include <EEPROM.h>
 
 #define CLK 2
 #define DT 3
@@ -13,6 +12,7 @@ int id;
 int prev_id = -1;
 unsigned long prev_millis;
 byte tick = LOW;
+byte menuWrite = false;
 
 // Encoder
 unsigned long prevButton;
@@ -63,14 +63,18 @@ void loop()
     switch (id)
     {
     case 0:
-        menu("> Main Menu");
+        lcd.print(" ");
+        lcd.setCursor(1,0);
+        lcd.print(">");
         if (encUp)
             id = 1;
         if (encDown)
             id = 4;
         break;
     case 1:
-        menu("> Pomodoro");
+        lcd.print(" ");
+        lcd.setCursor(1,1);
+        lcd.print(">");
         if (encUp)
             id = 2;
         if (encDown)
@@ -79,7 +83,9 @@ void loop()
             checkStavu();
         break;
     case 2:
-        menu("> Nastaveni");
+        lcd.print(" ");
+        lcd.setCursor(1,2);
+        lcd.print(">");
         if (encUp)
             id = 3;
         if (encDown)
@@ -88,22 +94,15 @@ void loop()
             id = 20;
         break;
     case 3:
-        menu("> Menu 3");
+        lcd.print(" ");
+        lcd.setCursor(1,3);
+        lcd.print(">");
         if (encUp)
-            id = 4;
+            id = 0;
         if (encDown)
             id = 2;
         if (enter)
             id = 30;
-        break;
-    case 4:
-        menu("> Menu 4");
-        if (encUp)
-            id = 0;
-        if (encDown)
-            id = 3;
-        if (enter)
-            id = 40;
         break;
     case 20:
         menu("> Pocet pomodor");
@@ -150,9 +149,22 @@ void menu(String text)
 {
     if (id != prev_id)
     {
-        lcd.clear();
+        if ( 0 > id > 4 && menuWrite == HIGH)
+        {
+            lcd.clear();
+            lcd.setCursor(5,0);
+            lcd.print("Hlavni menu");
+            lcd.setCursor(1,1);
+            lcd.print("Pomodoro");
+            lcd.setCursor(1,2);
+            lcd.print("Nastaveni");
+            lcd.setCursor(1,3);
+            lcd.print("Neco neco");
+            reset();
+        }
+/*        lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print(text);
+        lcd.print(text);*/
         Serial.println(id);
         prev_id = id;
     }
@@ -180,6 +192,7 @@ void reset()
     enter = LOW;
     stateButton = HIGH;
     press = HIGH;
+    menuWrite = LOW;
 }
 
 void encoder()
