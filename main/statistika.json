@@ -1,0 +1,11 @@
+{
+    "pomodoroNum" : "1",
+    "time" : {
+        "hours" : "1",
+        "minutes" : "25",
+        "seconds" : "0"
+    },
+    "repeats" : "5",
+    "success" : "1"
+}
+

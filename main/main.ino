@@ -1,5 +1,4 @@
 #include <LiquidCrystal_I2C.h>
-#include <EEPROM.h>
 
 #define CLK 2
 #define DT 3
@@ -28,7 +27,8 @@ byte press;
 
 // Pomodoro
 int hours, minutes, seconds;
-long counter, interval = 5000;
+long counter = 5000;
+long interval;
 byte state;
 int target = 3;
 int numPomodoro = 0;
@@ -47,10 +47,10 @@ void setup()
 
     lcd.init();
     lcd.backlight();
-/*    lcd.setCursor(0, 0);
-    lcd.print("POMODORO");
-    delay(5000);
-    lcd.clear();*/
+    /*    lcd.setCursor(0, 0);
+        lcd.print("POMODORO");
+        delay(5000);
+        lcd.clear();*/
 }
 
 void loop()
@@ -151,7 +151,7 @@ void menu(String text)
     if (id != prev_id)
     {
         lcd.clear();
-        lcd.setCursor(0, 0);
+        lcd.setCursor(0, 1);
         lcd.print(text);
         Serial.println(id);
         prev_id = id;
@@ -227,34 +227,34 @@ void odpocet()
         minutes = counter / 60;
         counter -= (minutes * 60);
         seconds = counter;
-//        Serial.print(hours);
+        //        Serial.print(hours);
         lcd.print(hours);
-//        Serial.print(":");
+        //        Serial.print(":");
         lcd.print(":");
         if (minutes < 10)
         {
-//            Serial.print("0");
-//            Serial.print(minutes);
+            //            Serial.print("0");
+            //            Serial.print(minutes);
             lcd.print("0");
             lcd.print(minutes);
         }
         else
         {
-//            Serial.print(minutes);
+            //            Serial.print(minutes);
             lcd.print(minutes);
         }
-//        Serial.print(":");
+        //        Serial.print(":");
         lcd.print(":");
         if (seconds < 10)
         {
-//            Serial.print("0");
-//            Serial.println(seconds);
+            //            Serial.print("0");
+            //            Serial.println(seconds);
             lcd.print("0");
             lcd.print(seconds);
         }
         else
         {
-//            Serial.println(seconds);
+            //            Serial.println(seconds);
             lcd.print(seconds);
         }
     }
@@ -286,7 +286,7 @@ int end()
     Serial.println("Ende");
     lcd.print("Ende");
     delay(1000);
-    
+
     numPomodoro = 0;
     state = !state;
     id = 0;
@@ -315,14 +315,77 @@ int checkStavu()
 
 int timeSettings()
 {
+    int newTarget;
+    int prevTarget;
+    byte choice;
+    int pointer = 0; //Ukazování stříšky
+    int pointerPrev;
+
+/*    counter = (mytime - millis()) / 1000;
+    hours = counter / 3600;
+    counter -= (hours * 3600);
+    minutes = counter / 60;
+    counter -= (minutes * 60);
+    seconds = counter;
+    lcd.clear();
+    lcd.setCursor(1, 0);
+    lcd.print("Min. cas: ");
+    lcd.setCursor(1, 1);
+    lcd.print(hours);
+    lcd.print(":");
+    lcd.print(minutes);
+    lcd.print(":");
+    lcd.print(seconds);*/
     if (id == 110)
     {
-        
+        while (true)
+        {
+            encoder();
+            lcd.setCursor(pointer, 0);
+            if (encUp == HIGH)
+            {
+                pointer++;
+                Serial.println("pointer +");
+            }
+            else if (encDown == HIGH)
+            {
+                pointer--;
+                Serial.println("pointer -");
+            }
+            else if (enter == HIGH)
+            {
+                if (pointer == 9)
+                {
+                    break;
+                }
+                else
+                {
+                    settings();
+                }
+            }
+
+            if ( pointer > 10)
+            {
+                pointer = 1;
+            }
+            else if (pointer < 0)
+            {
+                pointer = 9;
+            }
+
+            if (pointer != pointerPrev)
+            {
+                lcd.print(" ");
+                lcd.setCursor(pointer,2);
+                lcd.print("^");
+            }
+        }
     }
-    else if (id == 101)
-    {
-        
-    }
+}
+
+int settings()
+{
+
 }
 
 int pomodoroSettings()
@@ -331,18 +394,13 @@ int pomodoroSettings()
     int newTarget = 1;
     int prevTarget;
     lcd.clear();
-    lcd.setCursor(0,1);
+    lcd.setCursor(0, 1);
     lcd.print("Puvodni pocet: ");
     lcd.print(target);
-    lcd.setCursor(0,2);
+    lcd.setCursor(0, 2);
     lcd.print("Aktualni pocet: ");
     while (true)
     {
-        press = digitalRead(SW);
-        if (press == LOW)
-        {
-            stateButton = LOW;
-        }
 
         encoder();
 
@@ -351,12 +409,12 @@ int pomodoroSettings()
             newTarget++;
             Serial.println("Target +");
         }
-        else if(encDown == HIGH)
+        else if (encDown == HIGH)
         {
             newTarget--;
             Serial.println("Target -");
         }
-        else if(enter == HIGH)
+        else if (enter == HIGH)
         {
             Serial.println("enter");
             target = newTarget;
@@ -369,9 +427,9 @@ int pomodoroSettings()
         {
             prevTarget = newTarget;
             Serial.println("Prepis pocet na lcd");
-            lcd.setCursor(16,2);
+            lcd.setCursor(16, 2);
             lcd.print("   ");
-            lcd.setCursor(16,2);
+            lcd.setCursor(16, 2);
             lcd.print(newTarget);
         }
     }
