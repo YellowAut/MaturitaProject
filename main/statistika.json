@@ -1,11 +1,44 @@
 {
-    "pomodoroNum" : "1",
-    "time" : {
-        "hours" : "1",
-        "minutes" : "25",
-        "seconds" : "0"
-    },
-    "repeats" : "5",
-    "success" : "1"
+    "Pomodoro": [
+        {
+            "pomodoroNum": "1",
+            "time": {
+                "hours": "1",
+                "minutes": "25",
+                "seconds": "0"
+            },
+            "repeats": "5",
+            "success": "1"
+        },
+        {
+            "pomodoroNum": "2",
+            "time": {
+                "hours": "0",
+                "minutes": "30",
+                "seconds": "0"
+            },
+            "repeats": "10",
+            "success": "0"
+        },
+        {
+            "pomodoroNum": "3",
+            "time": {
+                "hours": "0",
+                "minutes": "25",
+                "seconds": "0"
+            },
+            "repeats": "4",
+            "success": "1"
+        },
+        {
+            "pomodoroNum": "4",
+            "time": {
+                "hours": "1",
+                "minutes": "30",
+                "seconds": "0"
+            },
+            "repeats": "2",
+            "success": "1"
+        }
+    ]
 }
-

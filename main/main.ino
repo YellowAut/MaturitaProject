@@ -371,10 +371,11 @@ int settings()
 {
     unsigned long timeNow = millis();
     timePrev = millis();
+    Serial.println("Settings");
     while (true)
     {
+        Serial.println("Settings");
         encoder();
-
         if (timeNow - timePrev >= 1000)
         {
             if (stav == 0)
