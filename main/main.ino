@@ -7,9 +7,14 @@
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-//Pomocné proměné, poté vyřešit
+// Pomocné proměné, poté vyřešit
 byte stav;
 int pointer = 1;
+unsigned long cas;
+unsigned long timeNow;
+int nastav;
+int setHours, setMin, setSec;
+int nevim;
 
 // Menu
 int id;
@@ -31,8 +36,7 @@ byte press;
 
 // Pomodoro
 int hours, minutes, seconds;
-long counter;
-long interval = 10000;
+long counter, interval = 5000;
 byte state;
 int target = 3;
 int numPomodoro = 0;
@@ -59,10 +63,8 @@ void setup()
 
 void loop()
 {
-
-    encoder();
-
     sampling();
+    encoder();
 
     switch (id)
     {
@@ -89,7 +91,7 @@ void loop()
         if (encDown)
             id = 1;
         if (enter)
-            timeSettings();
+            id = 20;
         break;
     case 3:
         menu("> Menu 3");
@@ -125,7 +127,7 @@ void loop()
         if (encDown)
             id = 20;
         if (enter)
-            id = 110;
+            timeSettings();
         break;
     case 22:
         menu("> Delka prestavky");
@@ -241,6 +243,7 @@ void pomodoro()
 
 void pause()
 {
+    Serial.print("Pause");
     lcd.clear();
     lcd.setCursor(0, 0);
     Serial.println("Prestavka: ");
@@ -250,6 +253,7 @@ void pause()
 
 int end()
 {
+    Serial.println("End");
     lcd.clear();
     lcd.setCursor(0, 0);
     Serial.println("Ende");
@@ -284,19 +288,21 @@ int checkStavu()
 
 int timeSettings()
 {
+    Serial.print("time settings");
     int newTarget;
     int prevTarget;
-    byte choice; //Ukazování stříšky
+    byte choice; // Ukazování stříšky
     int pointerPrev = 1;
     lcd.clear();
-    lcd.setCursor(1,0);
+    lcd.setCursor(1, 0);
     lcd.print("Nastaveni casu");
-    lcd.setCursor(1,3);
+    lcd.setCursor(1, 3);
     lcd.print("Exit");
     lcd.setCursor(1, 1);
+    mytime = millis() + interval + 1000;
     printTime();
-    lcd.setCursor(1,2);
-    lcd.print("^");
+    lcd.setCursor(1, 2);
+    lcd.print("^^");
 
     while (true)
     {
@@ -313,10 +319,12 @@ int timeSettings()
         }
         else if (enter == HIGH)
         {
-            if (pointer == 8)
+            if (pointer == 9)
             {
-                id = 2;
-                break; //Teď nevyskočilo, předtím jo, opravit
+                // interval = (setHours*25) + ((setTenMin * 10 + setMin) * 60000) + ((setTenSec * 10 + setSec) * 1000);
+                id = 0;
+                // Serial.println(interval);
+                break;
             }
             else
             {
@@ -324,17 +332,18 @@ int timeSettings()
             }
         }
 
-        if ( pointer > 8)
+        if (pointer > 9)
         {
             pointer = 1;
             Serial.println("Pointer 1");
         }
         else if (pointer < 1)
         {
-            pointer = 8;
+            pointer = 9;
             Serial.println("Pointer 9");
         }
-        else if (pointer == 2 && encUp == HIGH || pointer == 5 && encUp == HIGH)
+        // 00:00:00
+        else if (pointer == 2 || pointer == 3 || pointer == 5 || pointer == 6 || pointer == 8)
         {
             pointer++;
         }
@@ -342,24 +351,24 @@ int timeSettings()
         {
             pointer--;
         }
-        
+
         if (pointer != pointerPrev)
         {
             Serial.println("Pohnuti");
             Serial.println(pointer);
-            lcd.setCursor(0,3);
+            lcd.setCursor(0, 3);
             lcd.print(" ");
-            lcd.setCursor(pointerPrev,2);
-            lcd.print(" ");
-            if (pointer == 8)
+            lcd.setCursor(pointerPrev, 2);
+            lcd.print("  ");
+            if (pointer == 9)
             {
-                lcd.setCursor(0,3);
+                lcd.setCursor(0, 3);
                 lcd.print(">");
             }
             else
             {
-                lcd.setCursor(pointer,2);
-                lcd.print("^");
+                lcd.setCursor(pointer, 2);
+                lcd.print("^^");
             }
             pointerPrev = pointer;
         }
@@ -369,27 +378,122 @@ int timeSettings()
 
 int settings()
 {
-    unsigned long timeNow = millis();
-    timePrev = millis();
     Serial.println("Settings");
+    int prevNastav = nastav;
+    cas = timeNow;
+    switch (pointer)
+    {
+    case 1:
+        nastav = hours;
+        break;
+    case 4:
+        nastav = minutes;
+        break;
+    case 7:
+        nastav = seconds;
+        break;
+    }
     while (true)
     {
-        Serial.println("Settings");
+        unsigned long timeNow = millis();
+        //        Serial.println("Settings");
         encoder();
-        if (timeNow - timePrev >= 1000)
+        //        Serial.println(cas);
+        //        Serial.println(timeNow);
+        if (timeNow - cas >= 1000)
         {
-            if (stav == 0)
+            //            Serial.println("Millis");
+            if (stav == false)
             {
-                lcd.setCursor(pointer,2);
-                lcd.print(" ");
-                stav != stav;
+                //                Serial.println("Blank");
+                lcd.setCursor(pointer, 2);
+                lcd.print("  ");
+                stav = !stav;
             }
-            else if (stav == 1)
+            else if (stav == true)
             {
-                lcd.setCursor(pointer,2);
-                lcd.print("^");
-                stav!= stav;
+                //                Serial.println("Point");
+                lcd.setCursor(pointer, 2);
+                lcd.print("^^");
+                stav = !stav;
             }
+            cas = timeNow;
+        }
+
+        if (encUp)
+        {
+            nastav++;
+        }
+        else if (encDown)
+        {
+            nastav--;
+        }
+        else if (enter)
+        {
+            switch (pointer)
+            {
+            case 1:
+                setHours = nastav;
+                break;
+            case 4:
+                setMin = nastav;
+                break;
+            case 7:
+                setSec = nastav;
+                break;
+            }
+
+            /*            Serial.println("Break");
+                        Serial.print(setHours);
+                        Serial.print(":");
+                        Serial.print(setTenMin);
+                        Serial.print(setMin);
+                        Serial.print(":");
+                        Serial.print(setTenSec);
+                        Serial.println(setSec);*/
+            interval = (setHours * 3600000) + (setMin * 60000) + (setSec * 1000);
+            Serial.println(interval);
+            lcd.setCursor(pointer, 2);
+            lcd.print("^^");
+            break;
+        }
+        if (pointer == 1)
+        {
+            if (nastav > 99)
+            {
+                nastav = 0;
+            }
+            else if (nastav <= -1)
+            {
+                nastav = 99;
+            }
+        }
+        else
+        {
+            if (nastav >= 61)
+            {
+                nastav = 0;
+            }
+            else if (nastav <= -1)
+            {
+                nastav = 60;
+            }
+        }
+
+        if (nastav != prevNastav)
+        {
+            if (nastav < 10)
+            {
+                lcd.setCursor(pointer, 1);
+                lcd.print("0");
+                lcd.print(nastav);
+            }
+            else if (nastav >= 10)
+            {
+                lcd.setCursor(pointer, 1);
+                lcd.print(nastav);
+            }
+            prevNastav = nastav;
         }
     }
 }
@@ -443,32 +547,41 @@ int pomodoroSettings()
 
 void printTime()
 {
-        mytime = millis() + interval + 1000;
-        counter = (mytime - millis()) / 1000;
-        hours = counter / 3600;
-        counter -= (hours * 3600);
-        minutes = counter / 60;
-        counter -= (minutes * 60);
-        seconds = counter;
+    lcd.setCursor(1, 1);
+    counter = (mytime - millis()) / 1000;
+    hours = counter / 3600;
+    counter -= (hours * 3600);
+    minutes = counter / 60;
+    counter -= (minutes * 60);
+    seconds = counter;
+    if (hours < 10)
+    {
+        lcd.print("0");
         lcd.print(hours);
-        lcd.print(":");
-        if (minutes < 10)
-        {
-            lcd.print("0");
-            lcd.print(minutes);
-        }
-        else
-        {
-            lcd.print(minutes);
-        }
-        lcd.print(":");
-        if (seconds < 10)
-        {
-            lcd.print("0");
-            lcd.print(seconds);
-        }
-        else
-        {
-            lcd.print(seconds);
-        }
+    }
+    else
+    {
+        lcd.print(hours);
+    }
+    lcd.print(":");
+    if (minutes < 10)
+    {
+
+        lcd.print("0");
+        lcd.print(minutes);
+    }
+    else
+    {
+        lcd.print(minutes);
+    }
+    lcd.print(":");
+    if (seconds < 10)
+    {
+        lcd.print("0");
+        lcd.print(seconds);
+    }
+    else
+    {
+        lcd.print(seconds);
+    }
 }
