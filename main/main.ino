@@ -6,6 +6,7 @@
 #define DT 3
 #define SW 4
 #define SAMP 50
+#define buzzer 8
 File fp_stats;
 
 void encoder();         // Reading rotary encoder
@@ -35,6 +36,7 @@ int idPomodoro;
 int cislo;
 int newTarget;
 int prevTarget;
+unsigned long myTime;
 
 // Menu
 byte id = 1;
@@ -57,7 +59,7 @@ byte press;
 int hours, minutes, seconds;
 long counter, interval;
 long pomodoroTime = 5000;
-long pauseTime = 5000;
+long pauseTime = 10000;
 byte state;
 int target = 3;
 int numPomodoro = 0;
@@ -68,6 +70,7 @@ void setup()
     pinMode(CLK, INPUT);
     pinMode(SW, INPUT_PULLUP);
     pinMode(DT, INPUT);
+    pinMode(buzzer, OUTPUT);
 
     Serial.begin(9600);
     while (!Serial)
@@ -401,6 +404,7 @@ void pomodoro()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Kolik zbyva: "));
+    myTime = pomodoroTime;
     numPomodoro++;
     odpocet();
 }
@@ -410,6 +414,7 @@ void pause()
     // Serial.print("Pause");
     lcd.clear();
     lcd.setCursor(0, 0);
+    myTime = pauseTime;
     // Serial.println("Prestavka: ");
     lcd.print(F("Prestavka: "));
     odpocet();
@@ -435,6 +440,43 @@ int end()
 
 int checkStavu()
 {
+    if (numPomodoro <= 1)
+    {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        if (state == false)
+        {
+            lcd.print(F("To start pause"));
+        }
+        else if (state == true)
+        {
+            lcd.print(F("To start pomodoro"));
+        }
+        lcd.setCursor(0, 1);
+        lcd.print(F("PRESS BUTTON!"));
+        interval = millis();
+        while (true)
+        {
+            encoder();
+            mytime = millis();
+            if (mytime - interval >= 250)
+            {
+                if (stav == false)
+                {
+                    tone(buzzer, 1000);
+                }
+                else if (stav == true)
+                {
+                    noTone(buzzer);
+                }
+                stav = !stav;
+                interval = mytime;
+            }
+            if (enter == HIGH)
+                ;
+            break;
+        }
+    }
     if (numPomodoro >= target)
     {
         end();
