@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "Rehak\\program2.2.ino",
+    "sketch": "interrupt\\interrupt.ino",
     "port": "COM6",
     "programmer": "arduino:avrispmkii"
 }

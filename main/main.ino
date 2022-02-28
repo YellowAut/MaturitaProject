@@ -3,9 +3,9 @@
 #include <SPI.h>
 #include <EEPROM.h>
 
-#define CLK 3
+#define CLK 2
 #define DT 4
-#define SW 5
+#define SW 3
 #define SAMP 50
 #define buzzer 8
 File fp_stats;
