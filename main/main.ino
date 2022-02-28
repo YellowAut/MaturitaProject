@@ -5,37 +5,39 @@
 #define CLK 2
 #define DT 3
 #define SW 4
-#define SAMP 100
+#define SAMP 50
 File fp_stats;
 
-void encoder(); //Reading rotary encoder
-void sampling(); //1 millis sampling
-void reset(); //Reseting controls
-void menu(); //Menu overwrite
-void odpocet(); //Countdown
-void pomodoro(); //Pomodoro countdown
-void pause(); //Pause countdown
-int end(); //End screen + writing stats to SD card
-int checkStavu(); //Checking how many pomodoros left
-int timeSettings(); //Setting pomodoro and pause time
-int settings(); //Actuall setting
-int pomodoroSettings(); //Setting number of settings
-void printTime(); //Time printing on LCD
-void writeData(); //Writing data to SD card
+void encoder();         // Reading rotary encoder
+void sampling();        // 1 millis sampling
+void reset();           // Reseting controls
+void menu();            // Menu overwrite
+void odpocet();         // Countdown
+void pomodoro();        // Pomodoro countdown
+void pause();           // Pause countdown
+int end();              // End screen + writing stats to SD card
+int checkStavu();       // Checking how many pomodoros left
+int timeSettings();     // Setting pomodoro and pause time
+int settings();         // Actuall setting
+int pomodoroSettings(); // Setting number of settings
+void printTime();       // Time printing on LCD
+void writeData();       // Writing data to SD card
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 // Pomocné proměné, poté vyřešit
-byte stav;
+byte stav = false;
 int pointer = 1;
 unsigned long cas;
 unsigned long timeNow;
 int nastav;
 int idPomodoro;
 int cislo;
+int newTarget;
+int prevTarget;
 
 // Menu
-byte id;
+byte id = 1;
 byte prev_id = -1;
 byte tick = LOW;
 
@@ -53,7 +55,9 @@ byte press;
 
 // Pomodoro
 int hours, minutes, seconds;
-long counter, interval = 5000;
+long counter, interval;
+long pomodoroTime = 5000;
+long pauseTime = 5000;
 byte state;
 int target = 3;
 int numPomodoro = 0;
@@ -66,6 +70,9 @@ void setup()
     pinMode(DT, INPUT);
 
     Serial.begin(9600);
+    while (!Serial)
+    {
+    }
     cas = millis();
 
     prevEnc = digitalRead(CLK);
@@ -76,6 +83,15 @@ void setup()
             lcd.print("POMODORO");
             delay(5000);
             lcd.clear();*/
+    lcd.clear();
+    lcd.setCursor(1, 0);
+    lcd.print(F("Main menu"));
+    lcd.setCursor(0, 1);
+    lcd.print(F(">Pomodoro"));
+    lcd.setCursor(1, 2);
+    lcd.print(F("Settings"));
+    lcd.setCursor(1, 3);
+    lcd.print(F("About"));
     SD.begin(10);
     if (!SD.exists("STATS.CSV"))
     {
@@ -90,119 +106,231 @@ void setup()
 
 void loop()
 {
-
-    /*cislo++;
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(cislo);
-    writeData(cislo, 0, 35, 0, 5, 1);*/
-
     sampling();
-    encoder();
-
-    switch (id)
+    if (tick == HIGH)
     {
-    case 0:
-        menu("> Main Menu");
-        if (encUp)
-            id = 1;
-        if (encDown)
-            id = 4;
-        break;
-    case 1:
-        menu("> Pomodoro");
-        if (encUp)
-            id = 2;
-        if (encDown)
-            id = 0;
-        if (enter)
-            checkStavu();
-        break;
-    case 2:
-        menu("> Nastaveni");
-        if (encUp)
-            id = 3;
-        if (encDown)
-            id = 1;
-        if (enter)
+        encoder();
+        menu();
+        switch (id)
         {
-            id = 20;
+            /*    case 0: // Main menu
+                    if (encUp)
+                    {
+                        lcd.setCursor(0, 0);
+                        lcd.print(F(" "));
+                        lcd.setCursor(0, 1);
+                        lcd.print(F(">"));
+                        id = 1;
+                    }
+                    if (encDown)
+                    {
+                        lcd.setCursor(0, 0);
+                        lcd.print(F(" "));
+                        lcd.setCursor(0, 3);
+                        lcd.print(F(">"));
+                        id = 3;
+                    }
+                    break;*/
+        case 1: // Pomodoro
+            if (encUp)
+            {
+                lcd.setCursor(0, 1);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 2);
+                lcd.print(F(">"));
+                id = 2;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 1);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 3);
+                lcd.print(F(">"));
+                id = 3;
+            }
+            if (enter)
+            {
+                checkStavu();
+            }
+            break;
+        case 2: // Settings
+            if (encUp)
+            {
+                lcd.setCursor(0, 2);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 3);
+                lcd.print(F(">"));
+                id = 3;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 2);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 1);
+                lcd.print(F(">"));
+                id = 1;
+            }
+            if (enter)
+            {
+                stav = true;
+                id = 20;
+            }
+            break;
+        case 3: // About
+            if (encUp)
+            {
+                lcd.setCursor(0, 3);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 1);
+                lcd.print(F(">"));
+                id = 1;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 3);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 2);
+                lcd.print(F(">"));
+                id = 2;
+            }
+            if (enter)
+            {
+                about();
+            }
+            break;
+        case 20: // Pomodoro settings
+            if (encUp)
+            {
+                lcd.setCursor(0, 0);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 1);
+                lcd.print(F(">"));
+                id = 21;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 0);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 3);
+                lcd.print(F(">"));
+                id = 23;
+            }
+            if (enter)
+            {
+                pomodoroSettings();
+            }
+            break;
+        case 21: // Pomodoro length
+            if (encUp)
+            {
+                lcd.setCursor(0, 1);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 2);
+                lcd.print(F(">"));
+                id = 22;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 1);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 0);
+                lcd.print(F(">"));
+                id = 20;
+            }
+            if (enter)
+            {
+                timeSettings();
+            }
+            break;
+        case 22: // Pause length
+            if (encUp)
+            {
+                lcd.setCursor(0, 2);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 3);
+                lcd.print(F(">"));
+                id = 23;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 2);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 1);
+                lcd.print(F(">"));
+                id = 21;
+            }
+            if (enter)
+            {
+                timeSettings();
+            }
+            break;
+        case 23: // Exit
+            if (encUp)
+            {
+                lcd.setCursor(0, 3);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 0);
+                lcd.print(F(">"));
+                id = 20;
+            }
+            if (encDown)
+            {
+                lcd.setCursor(0, 3);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 2);
+                lcd.print(F(">"));
+                id = 22;
+            }
+            if (enter)
+            {
+                lcd.setCursor(0, 3);
+                lcd.print(F(" "));
+                lcd.setCursor(0, 1);
+                lcd.print(F(">"));
+                stav = true;
+                id = 1;
+            }
+            break;
         }
-        break;
-    case 3:
-        menu("> Menu 3");
-        if (encUp)
-            id = 4;
-        if (encDown)
-            id = 2;
-        if (enter)
-            id = 30;
-        break;
-    case 4:
-        menu("> Menu 4");
-        if (encUp)
-            id = 0;
-        if (encDown)
-            id = 3;
-        if (enter)
-            id = 40;
-        break;
-    case 20:
-        menu("> Pocet pomodor");
-        if (encUp)
-            id = 21;
-        if (encDown)
-            id = 23;
-        if (enter)
-            id = 201;
-        break;
-    case 21:
-        menu("> Delka pomodora");
-        if (encUp)
-            id = 22;
-        if (encDown)
-            id = 20;
-        if (enter)
-            timeSettings();
-        break;
-    case 22:
-        menu("> Delka prestavky");
-        if (encUp)
-            id = 23;
-        if (encDown)
-            id = 21;
-        if (enter)
-            id = 101;
-        break;
-    case 23:
-        menu("> Exit");
-        if (encUp)
-            id = 20;
-        if (encDown)
-            id = 22;
-        if (enter)
-            id = 1;
-        break;
-    case 201:
-        pomodoroSettings();
     }
 }
 
-void menu(String text)
+void menu()
 {
-    if (id != prev_id)
+
+    Serial.println(id);
+    Serial.println(stav);
+    if (id >= 0 && id <= 3 && stav == true)
     {
         lcd.clear();
+        lcd.setCursor(1, 0);
+        lcd.print(F("Main menu"));
         lcd.setCursor(0, 1);
-        lcd.print(text);
-        //Serial.println(id);
-        prev_id = id;
+        lcd.print(F(">Pomodoro"));
+        lcd.setCursor(1, 2);
+        lcd.print(F("Settings"));
+        lcd.setCursor(1, 3);
+        lcd.print(F("About"));
+        stav = false;
+    }
+    else if (id >= 20 && id <= 23 && stav == true)
+    {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(F(">Number of pomodoros"));
+        lcd.setCursor(1, 1);
+        lcd.print(F("Pomodoro length"));
+        lcd.setCursor(1, 2);
+        lcd.print(F("Pause length"));
+        lcd.setCursor(1, 3);
+        lcd.print(F("Back"));
+        stav = false;
     }
 }
 
 void sampling()
 {
-    unsigned long curr_millis = micros();
+    unsigned long curr_millis = millis();
 
     if (curr_millis - cas >= SAMP)
     {
@@ -251,7 +379,7 @@ void encoder()
         if (millis() - prevButton > 1000)
         {
             enter = HIGH;
-            //Serial.println("Tlacitko zmacknuto");
+            // Serial.println("Tlacitko zmacknuto");
         }
         prevButton = millis();
     }
@@ -279,20 +407,20 @@ void pomodoro()
 
 void pause()
 {
-    //Serial.print("Pause");
+    // Serial.print("Pause");
     lcd.clear();
     lcd.setCursor(0, 0);
-    //Serial.println("Prestavka: ");
+    // Serial.println("Prestavka: ");
     lcd.print(F("Prestavka: "));
     odpocet();
 }
 
 int end()
 {
-    //erial.println("End");
+    // erial.println("End");
     lcd.clear();
     lcd.setCursor(0, 0);
-    //Serial.println("Ende");
+    // Serial.println("Ende");
     lcd.print(F("Ende"));
     delay(1000);
     idPomodoro++;
@@ -300,8 +428,9 @@ int end()
     writeData(idPomodoro, 0, 45, 0, 5, 1);
     numPomodoro = 0;
     state = !state;
-    id = 0;
-    //Serial.println(id);
+    id = 1;
+    stav = true;
+    // Serial.println(id);
 }
 
 int checkStavu()
@@ -327,9 +456,7 @@ int checkStavu()
 
 int timeSettings()
 {
-    //Serial.print("time settings");
-    int newTarget;
-    int prevTarget;
+    // Serial.print("time settings");
     byte choice; // Ukazování stříšky
     int pointerPrev = 1;
     lcd.clear();
@@ -349,19 +476,20 @@ int timeSettings()
         if (encUp == HIGH)
         {
             pointer++;
-            //Serial.println("pointer +");
+            // Serial.println("pointer +");
         }
         else if (encDown == HIGH)
         {
             pointer--;
-            //Serial.println("pointer -");
+            // Serial.println("pointer -");
         }
         else if (enter == HIGH)
         {
             if (pointer == 9)
             {
                 // interval = (setHours*25) + ((setTenMin * 10 + setMin) * 60000) + ((setTenSec * 10 + setSec) * 1000);
-                id = 0;
+                stav = true;
+                id = 20;
                 // Serial.println(interval);
                 break;
             }
@@ -374,12 +502,12 @@ int timeSettings()
         if (pointer > 9)
         {
             pointer = 1;
-            //Serial.println("Pointer 1");
+            // Serial.println("Pointer 1");
         }
         else if (pointer < 1)
         {
             pointer = 9;
-            //Serial.println("Pointer 9");
+            // Serial.println("Pointer 9");
         }
         // 00:00:00
         else if (pointer == 2 || pointer == 3 || pointer == 5 || pointer == 6 || pointer == 8)
@@ -393,8 +521,8 @@ int timeSettings()
 
         if (pointer != pointerPrev)
         {
-            //Serial.println("Pohnuti");
-            //Serial.println(pointer);
+            // Serial.println("Pohnuti");
+            // Serial.println(pointer);
             lcd.setCursor(0, 3);
             lcd.print(F(" "));
             lcd.setCursor(pointerPrev, 2);
@@ -412,12 +540,12 @@ int timeSettings()
             pointerPrev = pointer;
         }
     }
-    //Serial.println("Za loopem");
+    // Serial.println("Za loopem");
 }
 
 int settings()
 {
-    //Serial.println("Settings");
+    // Serial.println("Settings");
     int prevNastav = nastav;
     cas = timeNow;
     switch (pointer)
@@ -482,16 +610,8 @@ int settings()
                 break;
             }
 
-            /*            Serial.println("Break");
-                        Serial.print(setHours);
-                        Serial.print(":");
-                        Serial.print(setTenMin); 
-                        Serial.print(setMin);
-                        Serial.print(":");
-                        Serial.print(setTenSec);
-                        Serial.println(setSec);*/
             interval = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-            //Serial.println(interval);
+            // Serial.println(interval);
             lcd.setCursor(pointer, 2);
             lcd.print(F("^^"));
             break;
@@ -539,7 +659,7 @@ int settings()
 
 int pomodoroSettings()
 {
-    //Serial.println("pomodoroSettings");
+    // Serial.println("pomodoroSettings");
     int newTarget = 1;
     int prevTarget;
     lcd.clear();
@@ -555,33 +675,34 @@ int pomodoroSettings()
         if (encUp == HIGH)
         {
             newTarget++;
-            //Serial.println("Target +");
+            // Serial.println("Target +");
         }
         else if (encDown == HIGH)
         {
             newTarget--;
-            //Serial.println("Target -");
+            // Serial.println("Target -");
         }
         else if (enter == HIGH)
         {
-            //Serial.println("enter");
+            // Serial.println("enter");
             target = newTarget;
-            id = 0;
-            //Serial.println(id);
+            id = 20;
+            stav = true;
+            // Serial.println(id);
             break;
         }
 
         if (newTarget != prevTarget)
         {
             prevTarget = newTarget;
-            //Serial.println("Prepis pocet na lcd");
+            // Serial.println("Prepis pocet na lcd");
             lcd.setCursor(16, 2);
             lcd.print(F("   "));
             lcd.setCursor(16, 2);
             lcd.print(newTarget);
         }
     }
-    //Serial.println("Pryc z while loopu");
+    // Serial.println("Pryc z while loopu");
 }
 
 void printTime()
@@ -627,14 +748,14 @@ void printTime()
 
 void writeData(int f_pomodoro, int f_hours, int f_minutes, int f_seconds, int f_numPomodoro, int success)
 {
-    //Serial.println("writeData");
+    // Serial.println("writeData");
     if (SD.exists("STATS.CSV"))
     {
-        //Serial.println("if sd exists");
+        // Serial.println("if sd exists");
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
         if (fp_stats)
         {
-        //    Serial.println("if fp_stats");
+            //    Serial.println("if fp_stats");
             fp_stats.print(f_pomodoro);
             fp_stats.print(",");
             fp_stats.print(f_hours);
@@ -649,5 +770,30 @@ void writeData(int f_pomodoro, int f_hours, int f_minutes, int f_seconds, int f_
             fp_stats.close();
         }
     }
-    //Serial.println("Konec");
+    // Serial.println("Konec");
+}
+
+void about()
+{
+    lcd.clear();
+    lcd.setCursor(2, 0);
+    lcd.print(F("Pomodoro Machine"));
+    lcd.setCursor(1, 1);
+    lcd.print(F("Author: Tomas Mach"));
+    lcd.setCursor(5, 2);
+    lcd.print(F("Class: 4EB"));
+    lcd.setCursor(4, 3);
+    lcd.print(F("Version: 1.0"));
+
+    while (true)
+    {
+        encoder();
+
+        if (enter)
+        {
+            stav = true;
+            id = 1;
+            break;
+        }
+    }
 }
