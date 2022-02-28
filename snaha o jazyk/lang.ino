@@ -1,11 +1,10 @@
 #include <LiquidCrystal_I2C.h>
 #include <SD.h>
 #include <SPI.h>
-#include <EEPROM.h>
 
-#define CLK 3
-#define DT 4
-#define SW 5
+#define CLK 2
+#define DT 3
+#define SW 4
 #define SAMP 50
 #define buzzer 8
 File fp_stats;
@@ -27,6 +26,12 @@ void writeData();       // Writing data to SD card
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
+//language
+String opt0, opt1,opt2, opt3, opt20, opt21, opt22, opt23;
+String rem, paus, ende, success, to_start_pause, to_start_pomodoro;
+String Press_Button, time_settings, out;
+String num_before, num_now, classroom, version;
+byte lang = true;
 
 // Pomocné proměné, poté vyřešit
 byte stav = false;
@@ -34,12 +39,11 @@ int pointer = 1;
 unsigned long cas;
 unsigned long timeNow;
 int nastav;
-byte idPomodoro;
+int idPomodoro;
 int cislo;
 int newTarget;
 int prevTarget;
 unsigned long myTime;
-byte success;
 
 // Menu
 byte id = 1;
@@ -70,8 +74,6 @@ long mytime;
 
 void setup()
 {
-    idPomodoro = EEPROM.read(idPomodoro);
-
     pinMode(CLK, INPUT);
     pinMode(SW, INPUT_PULLUP);
     pinMode(DT, INPUT);
@@ -84,7 +86,7 @@ void setup()
     cas = millis();
 
     prevEnc = digitalRead(CLK);
-
+    language();
     lcd.init();
     lcd.backlight();
     /*lcd.setCursor(0, 0);
@@ -93,13 +95,14 @@ void setup()
             lcd.clear();*/
     lcd.clear();
     lcd.setCursor(1, 0);
-    lcd.print(F("Main menu"));
+    lcd.print(opt0);
     lcd.setCursor(0, 1);
-    lcd.print(F(">Pomodoro"));
+    lcd.print(F(">"));
+    lcd.print(opt1);
     lcd.setCursor(1, 2);
-    lcd.print(F("Settings"));
+    lcd.print(opt2);
     lcd.setCursor(1, 3);
-    lcd.print(F("About"));
+    lcd.print(opt3);
     SD.begin(10);
     if (!SD.exists("STATS.CSV"))
     {
@@ -312,26 +315,27 @@ void menu()
     {
         lcd.clear();
         lcd.setCursor(1, 0);
-        lcd.print(F("Main menu"));
+        lcd.print(opt0);
         lcd.setCursor(0, 1);
-        lcd.print(F(">Pomodoro"));
+        lcd.print(opt1);
         lcd.setCursor(1, 2);
-        lcd.print(F("Settings"));
+        lcd.print(opt2);
         lcd.setCursor(1, 3);
-        lcd.print(F("About"));
+        lcd.print(opt3);
         stav = false;
     }
     else if (id >= 20 && id <= 23 && stav == true)
     {
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print(F(">Number of pomodoros"));
+        lcd.print(F(">"));
+        lcd.print(opt20);
         lcd.setCursor(1, 1);
-        lcd.print(F("Pomodoro length"));
+        lcd.print(opt21);
         lcd.setCursor(1, 2);
-        lcd.print(F("Pause length"));
+        lcd.print(opt22);
         lcd.setCursor(1, 3);
-        lcd.print(F("Back"));
+        lcd.print(opt23);
         stav = false;
     }
 }
@@ -408,7 +412,7 @@ void pomodoro()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Time remaining: "));
+    lcd.print(F("Kolik zbyva: "));
     mytime = millis() + pomodoroTime + 1000;
     numPomodoro++;
     state = false;
@@ -422,7 +426,7 @@ void pause()
     lcd.setCursor(0, 0);
     mytime = millis() + pauseTime + 1000;
     // Serial.println("Prestavka: ");
-    lcd.print(F("Pause remaining: "));
+    lcd.print(F("Prestavka: "));
     state = true;
     odpocet();
 }
@@ -432,11 +436,12 @@ int end()
     // erial.println("End");
     lcd.clear();
     lcd.setCursor(0, 0);
+    // Serial.println("Ende");
+    lcd.print(F("Ende"));
+    delay(1000);
     idPomodoro++;
     // writeData(idPomodoro, hours, minutes, seconds, numPomodoro,true);
-    writeData();
-    EEPROM.write(idPomodoro, idPomodoro);
-    Serial.println(idPomodoro);
+    writeData(idPomodoro, 0, 45, 0, 5, 1);
     numPomodoro = 0;
     state = !state;
     id = 1;
@@ -510,14 +515,7 @@ int timeSettings()
     int pointerPrev = 1;
     lcd.clear();
     lcd.setCursor(1, 0);
-    if (id == 21)
-    {
-        lcd.print(F("Pomodoro time"));
-    }
-    else if (id == 22)
-    {
-        lcd.print(F("Pause time"));
-    }
+    lcd.print(F("Nastaveni casu"));
     lcd.setCursor(1, 3);
     lcd.print(F("Exit"));
     lcd.setCursor(1, 1);
@@ -733,10 +731,10 @@ int pomodoroSettings()
     int prevTarget;
     lcd.clear();
     lcd.setCursor(0, 1);
-    lcd.print(F("Repeats before: "));
+    lcd.print(F("Puvodni pocet: "));
     lcd.print(target);
     lcd.setCursor(0, 2);
-    lcd.print(F("Repeats now: "));
+    lcd.print(F("Aktualni pocet: "));
     while (true)
     {
         encoder();
@@ -815,7 +813,7 @@ void printTime()
     }
 }
 
-void writeData()
+void writeData(int f_pomodoro, int f_hours, int f_minutes, int f_seconds, int f_numPomodoro, int success)
 {
     // Serial.println("writeData");
     if (SD.exists("STATS.CSV"))
@@ -825,15 +823,15 @@ void writeData()
         if (fp_stats)
         {
             //    Serial.println("if fp_stats");
-            fp_stats.print(idPomodoro);
+            fp_stats.print(f_pomodoro);
             fp_stats.print(",");
-            fp_stats.print(hours);
+            fp_stats.print(f_hours);
             fp_stats.print(",");
-            fp_stats.print(minutes);
+            fp_stats.print(f_minutes);
             fp_stats.print(",");
-            fp_stats.print(seconds);
+            fp_stats.print(f_seconds);
             fp_stats.print(",");
-            fp_stats.print(numPomodoro);
+            fp_stats.print(f_numPomodoro);
             fp_stats.print(",");
             fp_stats.println(success);
             fp_stats.close();
@@ -864,5 +862,31 @@ void about()
             id = 1;
             break;
         }
+    }
+}
+
+String language()
+{
+    if (lang == true)
+    {
+        opt0 = "Main menu";
+        opt1 = "Pomodoro";
+        opt2 = "Settings";
+        opt3 = "About";
+        opt20 = "Pomodoro settings";
+        opt21 = "Pomodoro length";
+        opt22 = "Pause length";
+        opt23 = "Back";
+    }
+    else if (lang == false)
+    {
+        opt0 = "Hlavni menu";
+        opt1 = "Pomodoro";
+        opt2 = "Nastaveni";
+        opt3 = "Informace";
+        opt20 = "Nastaveni pomodora";
+        opt21 = "Delka pomodora";
+        opt22 = "Delka pauzy";
+        opt23 = "Zpatky";
     }
 }
