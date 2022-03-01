@@ -15,6 +15,7 @@
 #define SAMP 50
 #define buzzer 8
 File fp_stats;
+File fp_settings;
 
 void encoder();         // Reading rotary encoder
 void sampling();        // 1 millis sampling
@@ -107,6 +108,10 @@ void setup()
     lcd.setCursor(1, 3);
     lcd.print(F("About"));
     SD.begin(10);
+    if (SD.exists("SETTINGS.CSV"))
+    {
+        fp_settings = SD.open("SETTINGS.CSV", FILE_READ);
+    }
     if (!SD.exists("STATS.CSV"))
     {
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
