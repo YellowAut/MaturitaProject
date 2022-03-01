@@ -1,3 +1,9 @@
+/////////////////////
+// POMODORO MACHINE//
+//    VERSION 1.0  //
+//    TOMAS MACH   //
+////////////////////
+
 #include <LiquidCrystal_I2C.h>
 #include <SD.h>
 #include <SPI.h>
@@ -17,16 +23,16 @@ void menu();            // Menu overwrite
 void odpocet();         // Countdown
 void pomodoro();        // Pomodoro countdown
 void pause();           // Pause countdown
+void about();           // Info page
+void printTime();       // Time printing on LCD
+void writeData();       // Writing data to SD card
 int end();              // End screen + writing stats to SD card
 int checkStavu();       // Checking how many pomodoros left
 int timeSettings();     // Setting pomodoro and pause time
 int settings();         // Actuall setting
 int pomodoroSettings(); // Setting number of settings
-void printTime();       // Time printing on LCD
-void writeData();       // Writing data to SD card
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-
 
 // Pomocné proměné, poté vyřešit
 byte stav = false;
@@ -306,8 +312,8 @@ void loop()
 void menu()
 {
 
-    //Serial.println(id);
-    //Serial.println(stav);
+    // Serial.println(id);
+    // Serial.println(stav);
     if (id >= 0 && id <= 3 && stav == true)
     {
         lcd.clear();
@@ -824,6 +830,13 @@ void writeData()
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
         if (fp_stats)
         {
+            mytime = millis() + pomodoroTime + 1000;
+            counter = (mytime - millis()) / 1000;
+            hours = counter / 3600;
+            counter -= (hours * 3600);
+            minutes = counter / 60;
+            counter -= (minutes * 60);
+            seconds = counter;
             //    Serial.println("if fp_stats");
             fp_stats.print(idPomodoro);
             fp_stats.print(",");
