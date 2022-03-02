@@ -1,6 +1,6 @@
-/////////////////////
+////////////////////
 // POMODORO MACHINE//
-//    VERSION 1.0  //
+//   VERSION 1.0   //
 //    TOMAS MACH   //
 ////////////////////
 
@@ -10,8 +10,8 @@
 #include <EEPROM.h>
 
 #define CLK 2
-#define DT 4
-#define SW 3
+#define DT 3
+#define SW 4
 #define SAMP 50
 #define buzzer 8
 File fp_stats;
@@ -111,6 +111,15 @@ void setup()
     if (SD.exists("SETTINGS.CSV"))
     {
         fp_settings = SD.open("SETTINGS.CSV", FILE_READ);
+    }
+    else
+    {
+        fp_settings = SD.open("SETTINGS.CSV", FILE_WRITE);
+        if (fp_settings)
+        {
+            fp_settings.println("pomodoroTime,pauseTime,target");
+            fp_settings.println(",3");
+        }
     }
     if (!SD.exists("STATS.CSV"))
     {
@@ -409,6 +418,15 @@ void odpocet()
 {
     while (mytime >= millis())
     {
+        encoder();
+        if (enter == HIGH)
+        {
+            success = false;
+            id = 1;
+            numPomodoro = target;
+            writeData();
+            break;
+        }
         lcd.setCursor(1, 1);
         printTime();
     }
@@ -420,9 +438,11 @@ void pomodoro()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(F("Time remaining: "));
-    mytime = millis() + pomodoroTime + 1000;
+    lcd.setCursor(0, 3);
+    lcd.print(F(">Exit pomodoro"));
     numPomodoro++;
     state = false;
+    mytime = millis() + pomodoroTime + 1000;
     odpocet();
 }
 
@@ -431,10 +451,12 @@ void pause()
     // Serial.print("Pause");
     lcd.clear();
     lcd.setCursor(0, 0);
-    mytime = millis() + pauseTime + 1000;
     // Serial.println("Prestavka: ");
     lcd.print(F("Pause remaining: "));
+    lcd.setCursor(0, 3);
+    lcd.print(F(">Exit pause"));
     state = true;
+    mytime = millis() + pauseTime + 1000;
     odpocet();
 }
 
@@ -459,9 +481,13 @@ int checkStavu()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    if (numPomodoro == target)
+    if (numPomodoro == target && success == true)
     {
         lcd.print(F("SUCCESS!"));
+    }
+    else if (numPomodoro == target && success == false)
+    {
+        lcd.print(F("FAIL!"));
     }
     else if (state == false)
     {
@@ -709,13 +735,13 @@ int settings()
         }
         else
         {
-            if (nastav >= 61)
+            if (nastav >= 60)
             {
                 nastav = 0;
             }
             else if (nastav <= -1)
             {
-                nastav = 60;
+                nastav = 59;
             }
         }
 
