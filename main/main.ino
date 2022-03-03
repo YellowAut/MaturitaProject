@@ -9,9 +9,9 @@
 #include <SPI.h>
 #include <EEPROM.h>
 
-#define CLK 2
-#define DT 3
-#define SW 4
+#define CLK 3
+#define DT 4
+#define SW 5
 #define SAMP 50
 #define buzzer 8
 File fp_stats;
@@ -178,6 +178,7 @@ void loop()
             }
             if (enter)
             {
+                success = true;
                 pomodoro();
             }
             break;
@@ -404,7 +405,7 @@ void encoder()
     }
     else if (stateButton == LOW)
     {
-        if (millis() - prevButton > 1000)
+        if (millis() - prevButton > 250)
         {
             enter = HIGH;
             // Serial.println("Tlacitko zmacknuto");

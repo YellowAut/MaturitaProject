@@ -26,11 +26,11 @@
  *
  */
 
-int switchPin = 4;     // button pin
+int switchPin = 5;     // button pin
 int switchState = HIGH; // button value
 
 int pinA = 3;                         // Rotary encoder Pin A
-int pinB = 2;                         // Rotary encoder Pin B
+int pinB = 4;                         // Rotary encoder Pin B
 int pinAstateCurrent = LOW;           // Current state of Pin A
 int pinAStateLast = pinAstateCurrent; // Last read value of Pin A
 
