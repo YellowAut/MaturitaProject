@@ -14,6 +14,18 @@
 #define SW 5
 #define SAMP 50
 #define buzzer 8
+
+//EEPROM adresy
+#define idPom 0
+#define srepeat 2
+
+#define pomHours 3
+#define pomMinutes 4
+#define pomSeconds 5
+#define pauHours 6
+#define pauMinutes 7
+#define pauSeconds 8
+
 File fp_stats;
 File fp_settings;
 
@@ -68,16 +80,35 @@ byte press;
 // Pomodoro
 int hours, minutes, seconds;
 long counter, interval;
-long pomodoroTime = 5000;
-long pauseTime = 10000;
+long pomodoroTime;
+long pauseTime;
 byte state;
-int target = 3;
+int target;
 int numPomodoro = 0;
 long mytime;
 
 void setup()
 {
-    idPomodoro = EEPROM.read(idPomodoro);
+    EEPROM.get(idPom, idPomodoro);
+    EEPROM.get(srepeat, target);
+
+    EEPROM.get(pomHours, hours);
+    EEPROM.get(pomMinutes, minutes);
+    EEPROM.get(pomSeconds, seconds);
+    pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+
+    Serial.println(hours);
+    Serial.println(minutes);
+    Serial.println(minutes);
+
+    EEPROM.get(pauHours, hours);
+    EEPROM.get(pauMinutes, minutes);
+    EEPROM.get(pauSeconds, seconds);
+    pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+
+    Serial.println(hours);
+    Serial.println(minutes);
+    Serial.println(minutes);
 
     pinMode(CLK, INPUT);
     pinMode(SW, INPUT_PULLUP);
@@ -108,19 +139,7 @@ void setup()
     lcd.setCursor(1, 3);
     lcd.print(F("About"));
     SD.begin(10);
-    if (SD.exists("SETTINGS.CSV"))
-    {
-        fp_settings = SD.open("SETTINGS.CSV", FILE_READ);
-    }
-    else
-    {
-        fp_settings = SD.open("SETTINGS.CSV", FILE_WRITE);
-        if (fp_settings)
-        {
-            fp_settings.println("pomodoroTime,pauseTime,target");
-            fp_settings.println(",3");
-        }
-    }
+
     if (!SD.exists("STATS.CSV"))
     {
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
@@ -469,7 +488,7 @@ int end()
     idPomodoro++;
     // writeStats(idPomodoro, hours, minutes, seconds, numPomodoro,true);
     writeStats();
-    EEPROM.write(idPomodoro, idPomodoro);
+    EEPROM.write(idPom, idPomodoro);
     Serial.println(idPomodoro);
     numPomodoro = 0;
     state = !state;
@@ -485,10 +504,12 @@ int checkStavu()
     if (numPomodoro == target && success == true)
     {
         lcd.print(F("SUCCESS!"));
+        success = 1;
     }
     else if (numPomodoro == target && success == false)
     {
         lcd.print(F("FAIL!"));
+        success = 0;
     }
     else if (state == false)
     {
@@ -712,10 +733,16 @@ int settings()
             }
             if (id == 21)
             {
+                EEPROM.write(pomHours, hours);
+                EEPROM.write(pomMinutes, minutes);
+                EEPROM.write(pomSeconds, seconds);
                 pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
             }
             else if (id == 22)
             {
+                EEPROM.write(pauHours, hours);
+                EEPROM.write(pauMinutes, minutes);
+                EEPROM.write(pauSeconds, seconds);
                 pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
             }
             // Serial.println(interval);
@@ -793,6 +820,7 @@ int pomodoroSettings()
         {
             // Serial.println("enter");
             target = newTarget;
+            EEPROM.write(srepeat, target);
             id = 20;
             stav = true;
             // Serial.println(id);
@@ -862,13 +890,20 @@ void writeStats()
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
         if (fp_stats)
         {
-            mytime = millis() + pomodoroTime + 1000;
+            mytime = millis() + pomodoroTime;
             counter = (mytime - millis()) / 1000;
             hours = counter / 3600;
             counter -= (hours * 3600);
             minutes = counter / 60;
             counter -= (minutes * 60);
             seconds = counter;
+            Serial.print(hours);
+            Serial.print(":");
+            Serial.print(minutes);
+            Serial.print(":");
+            Serial.println(seconds);
+            Serial.println(mytime);
+
             //    Serial.println("if fp_stats");
             fp_stats.print(idPomodoro);
             fp_stats.print(",");
@@ -887,18 +922,6 @@ void writeStats()
     // Serial.println("Konec");
 }
 
-void writeSettings()
-{
-    if (SD.exists("SETTINGS.CSV"))
-    {
-        fp_settings = SD.open("SETTINGS.CSV", FILE_WRITE);
-        if (fp_settings)
-        {
-            fp_stats;
-        }
-    }
-}
-
 void about()
 {
     lcd.clear();
@@ -909,7 +932,7 @@ void about()
     lcd.setCursor(5, 2);
     lcd.print(F("Class: 4EB"));
     lcd.setCursor(4, 3);
-    lcd.print(F("Version: 1.0"));
+    lcd.print(F("Version: 0.8"));
 
     while (true)
     {
