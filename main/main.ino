@@ -26,7 +26,7 @@ void pomodoro();        // Pomodoro countdown
 void pause();           // Pause countdown
 void about();           // Info page
 void printTime();       // Time printing on LCD
-void writeData();       // Writing data to SD card
+void writeStats();       // Writing data to SD card
 int end();              // End screen + writing stats to SD card
 int checkStavu();       // Checking how many pomodoros left
 int timeSettings();     // Setting pomodoro and pause time
@@ -425,7 +425,7 @@ void odpocet()
             success = false;
             id = 1;
             numPomodoro = target;
-            writeData();
+            writeStats();
             break;
         }
         lcd.setCursor(1, 1);
@@ -467,8 +467,8 @@ int end()
     lcd.clear();
     lcd.setCursor(0, 0);
     idPomodoro++;
-    // writeData(idPomodoro, hours, minutes, seconds, numPomodoro,true);
-    writeData();
+    // writeStats(idPomodoro, hours, minutes, seconds, numPomodoro,true);
+    writeStats();
     EEPROM.write(idPomodoro, idPomodoro);
     Serial.println(idPomodoro);
     numPomodoro = 0;
@@ -853,9 +853,9 @@ void printTime()
     }
 }
 
-void writeData()
+void writeStats()
 {
-    // Serial.println("writeData");
+    // Serial.println("writeStats");
     if (SD.exists("STATS.CSV"))
     {
         // Serial.println("if sd exists");
@@ -885,6 +885,18 @@ void writeData()
         }
     }
     // Serial.println("Konec");
+}
+
+void writeSettings()
+{
+    if (SD.exists("SETTINGS.CSV"))
+    {
+        fp_settings = SD.open("SETTINGS.CSV", FILE_WRITE);
+        if (fp_settings)
+        {
+            fp_stats;
+        }
+    }
 }
 
 void about()
