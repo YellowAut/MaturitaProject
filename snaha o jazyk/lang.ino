@@ -22,7 +22,7 @@ int timeSettings();     // Setting pomodoro and pause time
 int settings();         // Actuall setting
 int pomodoroSettings(); // Setting number of settings
 void printTime();       // Time printing on LCD
-void writeData();       // Writing data to SD card
+void writeStats();       // Writing data to SD card
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 

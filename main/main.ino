@@ -1,6 +1,6 @@
 ////////////////////
 // POMODORO MACHINE//
-//   VERSION 1.0   //
+//   VERSION 0.8   //
 //    TOMAS MACH   //
 ////////////////////
 
@@ -15,7 +15,7 @@
 #define SAMP 50
 #define buzzer 8
 
-//EEPROM adresy
+// EEPROM adresy
 #define idPom 0
 #define srepeat 2
 
@@ -38,7 +38,7 @@ void pomodoro();        // Pomodoro countdown
 void pause();           // Pause countdown
 void about();           // Info page
 void printTime();       // Time printing on LCD
-void writeStats();       // Writing data to SD card
+void writeStats();      // Writing data to SD card
 int end();              // End screen + writing stats to SD card
 int checkStavu();       // Checking how many pomodoros left
 int timeSettings();     // Setting pomodoro and pause time
@@ -89,6 +89,12 @@ long mytime;
 
 void setup()
 {
+    Serial.begin(9600);
+    while (!Serial)
+    {
+    }
+    cas = millis();
+
     EEPROM.get(idPom, idPomodoro);
     EEPROM.get(srepeat, target);
 
@@ -97,8 +103,10 @@ void setup()
     EEPROM.get(pomSeconds, seconds);
     pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
 
-    Serial.println(hours);
-    Serial.println(minutes);
+    Serial.print(hours);
+    Serial.print(":");
+    Serial.print(minutes);
+    Serial.print(":");
     Serial.println(minutes);
 
     EEPROM.get(pauHours, hours);
@@ -106,8 +114,10 @@ void setup()
     EEPROM.get(pauSeconds, seconds);
     pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
 
-    Serial.println(hours);
-    Serial.println(minutes);
+    Serial.print(hours);
+    Serial.print(":");
+    Serial.print(minutes);
+    Serial.print(":");
     Serial.println(minutes);
 
     pinMode(CLK, INPUT);
@@ -115,20 +125,13 @@ void setup()
     pinMode(DT, INPUT);
     pinMode(buzzer, OUTPUT);
 
-    Serial.begin(9600);
-    while (!Serial)
-    {
-    }
-    cas = millis();
-
     prevEnc = digitalRead(CLK);
 
     lcd.init();
     lcd.backlight();
-    /*lcd.setCursor(0, 0);
-            lcd.print("POMODORO");
-            delay(5000);
-            lcd.clear();*/
+    lcd.setCursor(0, 0);
+    lcd.print("POMODORO");
+    delay(5000);
     lcd.clear();
     lcd.setCursor(1, 0);
     lcd.print(F("Main menu"));
@@ -158,26 +161,9 @@ void loop()
     {
         encoder();
         menu();
+        // Menu ID
         switch (id)
         {
-            /*    case 0: // Main menu
-                    if (encUp)
-                    {
-                        lcd.setCursor(0, 0);
-                        lcd.print(F(" "));
-                        lcd.setCursor(0, 1);
-                        lcd.print(F(">"));
-                        id = 1;
-                    }
-                    if (encDown)
-                    {
-                        lcd.setCursor(0, 0);
-                        lcd.print(F(" "));
-                        lcd.setCursor(0, 3);
-                        lcd.print(F(">"));
-                        id = 3;
-                    }
-                    break;*/
         case 1: // Pomodoro
             if (encUp)
             {
@@ -348,6 +334,7 @@ void menu()
 
     // Serial.println(id);
     // Serial.println(stav);
+    // Vypisování menu na LCD
     if (id >= 0 && id <= 3 && stav == true)
     {
         lcd.clear();
@@ -578,7 +565,7 @@ int timeSettings()
         lcd.print(F("Pause time"));
     }
     lcd.setCursor(1, 3);
-    lcd.print(F("Exit"));
+    lcd.print(F("Save and Exit"));
     lcd.setCursor(1, 1);
     if (id == 21)
     {
@@ -737,6 +724,11 @@ int settings()
                 EEPROM.write(pomMinutes, minutes);
                 EEPROM.write(pomSeconds, seconds);
                 pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+                Serial.print(hours);
+                Serial.print(":");
+                Serial.print(minutes);
+                Serial.print(":");
+                Serial.println(seconds);
             }
             else if (id == 22)
             {
@@ -744,6 +736,11 @@ int settings()
                 EEPROM.write(pauMinutes, minutes);
                 EEPROM.write(pauSeconds, seconds);
                 pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+                Serial.print(hours);
+                Serial.print(":");
+                Serial.print(minutes);
+                Serial.print(":");
+                Serial.println(seconds);
             }
             // Serial.println(interval);
             lcd.setCursor(pointer, 2);
@@ -802,6 +799,7 @@ int pomodoroSettings()
     lcd.print(target);
     lcd.setCursor(0, 2);
     lcd.print(F("Repeats now: "));
+    lcd.print(target);
     while (true)
     {
         encoder();
@@ -897,12 +895,6 @@ void writeStats()
             minutes = counter / 60;
             counter -= (minutes * 60);
             seconds = counter;
-            Serial.print(hours);
-            Serial.print(":");
-            Serial.print(minutes);
-            Serial.print(":");
-            Serial.println(seconds);
-            Serial.println(mytime);
 
             //    Serial.println("if fp_stats");
             fp_stats.print(idPomodoro);
@@ -937,7 +929,6 @@ void about()
     while (true)
     {
         encoder();
-
         if (enter)
         {
             stav = true;
