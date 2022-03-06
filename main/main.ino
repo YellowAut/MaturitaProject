@@ -1,7 +1,7 @@
 ////////////////////
-// POMODORO MACHINE//
-//   VERSION 0.8   //
-//    TOMAS MACH   //
+//POMODORO MACHINE//
+//  VERSION 0.8   //
+//   TOMAS MACH   //
 ////////////////////
 
 #include <LiquidCrystal_I2C.h>
@@ -362,6 +362,7 @@ void menu()
         stav = false;
     }
 }
+
 
 void sampling()
 {
@@ -910,6 +911,7 @@ void writeStats()
             fp_stats.println(success);
             fp_stats.close();
         }
+        fp_stats.close();
     }
     // Serial.println("Konec");
 }
