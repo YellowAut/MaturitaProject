@@ -89,13 +89,14 @@ long mytime;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(9600); //Spuštění serialu
     while (!Serial)
     {
     }
-    cas = millis();
+    cas = millis(); //Uložení millis do proměnné cas
 
-    EEPROM.get(idPom, idPomodoro);
+    //Čtení uložených hodnot z EEPROMu
+    EEPROM.get(idPom, idPomodoro); 
     EEPROM.get(srepeat, target);
 
     EEPROM.get(pomHours, hours);
@@ -120,13 +121,16 @@ void setup()
     Serial.print(":");
     Serial.println(minutes);
 
+    //Přiřazení pinů pinů na rotačním enkóderu + bzučáku
     pinMode(CLK, INPUT);
     pinMode(SW, INPUT_PULLUP);
     pinMode(DT, INPUT);
     pinMode(buzzer, OUTPUT);
 
+    //Uložení polohy enkóderu
     prevEnc = digitalRead(CLK);
 
+    //Inicializace LCD + Startovní nápis + Vypsání menu
     lcd.init();
     lcd.backlight();
     lcd.setCursor(0, 0);
@@ -141,28 +145,28 @@ void setup()
     lcd.print(F("Settings"));
     lcd.setCursor(1, 3);
     lcd.print(F("About"));
-    SD.begin(10);
 
-    if (!SD.exists("STATS.CSV"))
+    SD.begin(10); //Zapnutí čtečky SD karet
+    if (!SD.exists("STATS.CSV")) //Zkontroluji, zda-li (ne)existuje soubor stats.csv
     {
-        fp_stats = SD.open("STATS.CSV", FILE_WRITE);
+        fp_stats = SD.open("STATS.CSV", FILE_WRITE); // Pokud neexistuje, soubor vytvořím
         if (fp_stats)
         {
-            fp_stats.println("Pomodoro,Hours,Minutes,Seconds,Repeats,Success");
-            fp_stats.close();
+            fp_stats.println("Pomodoro,Hours,Minutes,Seconds,Repeats,Success"); //Zapsání prvního řádku do nového CSV souboru
+            fp_stats.close(); //Zavřu soubor kvůli výkonu a paměti
         }
     }
 }
 
 void loop()
 {
-    sampling();
-    if (tick == HIGH)
+    sampling(); 
+    if (tick == HIGH) //Uběhlo 50 millis
     {
-        encoder();
-        menu();
+        encoder(); //Ovládání menu
+        menu(); //Vypisování menu pokud se potřebuji dostat na jiné menu
         // Menu ID
-        switch (id)
+        switch (id) //Šipka na ukázání polohy na menu
         {
         case 1: // Pomodoro
             if (encUp)
@@ -331,11 +335,7 @@ void loop()
 
 void menu()
 {
-
-    // Serial.println(id);
-    // Serial.println(stav);
-    // Vypisování menu na LCD
-    if (id >= 0 && id <= 3 && stav == true)
+    if (id >= 0 && id <= 3 && stav == true) //Pokud je id 0 až 3 a stav true.
     {
         lcd.clear();
         lcd.setCursor(1, 0);
@@ -346,7 +346,7 @@ void menu()
         lcd.print(F("Settings"));
         lcd.setCursor(1, 3);
         lcd.print(F("About"));
-        stav = false;
+        stav = false; //Opět hodím stav na false
     }
     else if (id >= 20 && id <= 23 && stav == true)
     {
@@ -359,28 +359,29 @@ void menu()
         lcd.print(F("Pause length"));
         lcd.setCursor(1, 3);
         lcd.print(F("Back"));
-        stav = false;
+        stav = false; 
     }
 }
 
 
 void sampling()
 {
-    unsigned long curr_millis = millis();
+    unsigned long curr_millis = millis(); //zapíšu aktuální millis do curr_millis
 
-    if (curr_millis - cas >= SAMP)
+    if (curr_millis - cas >= SAMP) //Zkontroluji, jestli uběhl už SAMP
     {
-        tick = HIGH;
-        cas = curr_millis;
+        tick = HIGH; //Nastavím tick na HIGH a proběhne menu
+        cas = curr_millis; 
     }
     else
     {
-        tick = LOW;
+        tick = LOW; //tick na LOW a čeká se se millis opět nenaplní
     }
 }
 
 void reset()
 {
+    //Resetuji všechny hodnoty na 0, aby se mi mé volby neopakovali
     encUp = LOW;
     encDown = LOW;
     enter = LOW;
@@ -390,139 +391,133 @@ void reset()
 
 void encoder()
 {
-    reset();
+    reset(); 
 
-    press = digitalRead(SW);
-    if (press == LOW)
+    press = digitalRead(SW); //Čtu, zda-li se nezmáčklo tlačíko
+    if (press == LOW) //Pokud je zmáčknuté tlačítko
     {
-        stateButton = LOW;
+        stateButton = LOW; //Zapíšu stateButton na LOW. Kontroluji v pozdější podmínce
     }
 
-    actuEnc = digitalRead(CLK);
-    if (actuEnc == 1 && actuEnc != prevEnc)
+    actuEnc = digitalRead(CLK); //Aktuální pozice enkóderu
+    if (actuEnc == 1 && actuEnc != prevEnc) //Pokud se změnila pozice enkóderu
     {
-        if (digitalRead(DT) != actuEnc)
+        if (digitalRead(DT) != actuEnc) //Pokud se otočil enkóder doprava
         {
             encUp = HIGH;
         }
-        else
+        else //Pokud se otočil enkóder doleva
         {
             encDown = HIGH;
         }
     }
-    else if (stateButton == LOW)
+    else if (stateButton == LOW) //Pokud bylo tlačítko předtím zmáčknuto
     {
-        if (millis() - prevButton > 250)
+        if (millis() - prevButton > 250) //A uběhlo 250 millis (Pro lepší funkčnost)
         {
-            enter = HIGH;
-            // Serial.println("Tlacitko zmacknuto");
+            enter = HIGH; //Nastavím enter na high
         }
-        prevButton = millis();
+        prevButton = millis(); //Zapíšu čas posledního zmáčknutí tlačítka
     }
-    prevEnc = actuEnc;
+    prevEnc = actuEnc; //Zapíšu aktuální pozici enkóderu do předchozí pozice enkóderu
 }
 
 void odpocet()
 {
-    while (mytime >= millis())
+    while (mytime >= millis()) //Dokud neuběhne potřebný čas, budu odpočítávat a vypisovat čas na LCD
     {
         encoder();
-        if (enter == HIGH)
+        if (enter == HIGH) //Pokud zmáčknu enter, zruším pomodoro a zapíšu statistiky s failem na microSD kartu
         {
             success = false;
             id = 1;
-            numPomodoro = target;
-            writeStats();
+            numPomodoro = target; //Nastavím počet pomodor na Target a díky tomu vyskočím z celého pomodora
             break;
         }
         lcd.setCursor(1, 1);
-        printTime();
+        printTime(); //Printování času na LCD
     }
-    checkStavu();
+    checkStavu(); //Pokud uběhl požadovaný interval času, skočím do checkování stavu
 }
 
 void pomodoro()
 {
-    lcd.clear();
+    lcd.clear(); 
     lcd.setCursor(0, 0);
     lcd.print(F("Time remaining: "));
     lcd.setCursor(0, 3);
     lcd.print(F(">Exit pomodoro"));
-    numPomodoro++;
-    state = false;
-    mytime = millis() + pomodoroTime + 1000;
-    odpocet();
+    numPomodoro++; //Přidám jedničku do numPomodoro, které potom porovnávám s cílem
+    state = false; //Nastavím state na false, aby byl další odpočet false
+    mytime = millis() + pomodoroTime + 1000; //Přepíšu mytime na požadovaný interval pomodora. + 1 vteřina aby to začlo na požadovaném času
+    odpocet(); //Zapnu odpočet
 }
 
 void pause()
 {
-    // Serial.print("Pause");
     lcd.clear();
     lcd.setCursor(0, 0);
-    // Serial.println("Prestavka: ");
     lcd.print(F("Pause remaining: "));
     lcd.setCursor(0, 3);
     lcd.print(F(">Exit pause"));
-    state = true;
-    mytime = millis() + pauseTime + 1000;
-    odpocet();
+    state = true; //Nastavím state na true, aby byl další odpočet pomodoro
+    mytime = millis() + pauseTime + 1000; //Přepíšu mytime na požadovaný interval pauzy. + 1 vteřina aby to začlo na požadovaném čase
+    odpocet(); //zapnu odpočet
 }
 
 int end()
 {
-    // erial.println("End");
+    //Vyvolám tuto funkci pokud bylo pomodoro ukončeno
     lcd.clear();
     lcd.setCursor(0, 0);
-    idPomodoro++;
-    // writeStats(idPomodoro, hours, minutes, seconds, numPomodoro,true);
-    writeStats();
-    EEPROM.write(idPom, idPomodoro);
-    Serial.println(idPomodoro);
-    numPomodoro = 0;
-    state = !state;
-    id = 1;
-    stav = true;
-    // Serial.println(id);
+    idPomodoro++; //Přidám 1 do idPomodoro. Lepší orientace v statistikách
+    writeStats(); //Zapsat statistiky
+    EEPROM.write(idPom, idPomodoro); //Zapíšu idPomodora do EEPROM, abych pokračoval od původního i po restartu Arduina
+    //Serial.println(idPomodoro);
+    numPomodoro = 0; //Nastavím numPomodoro na 0, ať mohu opět spustit pomodoro
+    state = !state; //Co kurva dělá state
+    id = 1; //Skočím zpátky do menu na pozici č.1 (Pomodoro)
+    stav = true; //Stav na true aby se mi opět vypsalo menu
 }
 
 int checkStavu()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    if (numPomodoro == target && success == true)
+    if (numPomodoro == target && success == true) //Pokud ukončím pomodoro úspěšně
     {
         lcd.print(F("SUCCESS!"));
-        success = 1;
+        success = 1; //Nastavím success na 1 pro zapsání neúspěchu na SD kartu
     }
-    else if (numPomodoro == target && success == false)
+    else if (numPomodoro == target && success == false) //Pokud ukončím pomodoro neúspěšně
     {
         lcd.print(F("FAIL!"));
-        success = 0;
+        success = 0; //Nastavím success na 0 pro zapsání neúspěchu na SD kartu
     }
-    else if (state == false)
+    else if (state == false) //Pokud je state false, další odpočet je pauza
     {
         lcd.print(F("To start pause"));
     }
-    else if (state == true)
+    else if (state == true) //Pokud je state na true, další odpočet je pomodoro
     {
         lcd.print(F("To start pomodoro"));
     }
     lcd.setCursor(0, 1);
     lcd.print(F("PRESS BUTTON!"));
-    interval = millis();
-    while (true)
+    interval = millis(); 
+    while (true) //Čekám na potvrzení uživatele, že chce začít další odpočet
     {
         encoder();
         mytime = millis();
-        if (mytime - interval >= 250)
+        if (mytime - interval >= 250) //Každou 1/4 vteřiny pípá bzučák
         {
             if (stav == false)
             {
-                tone(buzzer, 1000);
+                tone(buzzer, 1000); //Zapnutí bzučení po 250 milisekundách
             }
             else if (stav == true)
             {
-                noTone(buzzer);
+                noTone(buzzer); //Vypnutí bzučení po 250 milisekundách
             }
             stav = !stav;
             interval = mytime;
@@ -533,17 +528,17 @@ int checkStavu()
             break;
         }
     }
-    if (numPomodoro >= target)
+    if (numPomodoro >= target) //Pokud je počet pomodor splněný (toto se sepne i pokud jsem ukončil předčasně), skočím na end
     {
         end();
     }
     else
     {
-        if (state == true)
+        if (state == true) //Pokud je state true, začnu odpočet pomodora
         {
             pomodoro();
         }
-        else if (state == false)
+        else if (state == false) //Pokud je state false, začnu odpočet pauzy
         {
             pause();
         }
@@ -552,111 +547,104 @@ int checkStavu()
 
 int timeSettings()
 {
-    // Serial.print("time settings");
-    byte choice; // Ukazování stříšky
-    int pointerPrev = 1;
+    byte choice; //Pozice stříšky
+    int pointerPrev = 1; //Předchozí pozice stříšky
     lcd.clear();
     lcd.setCursor(1, 0);
-    if (id == 21)
+    if (id == 21) //Pokud jsem zvolil nastavování pomodora
     {
         lcd.print(F("Pomodoro time"));
     }
-    else if (id == 22)
+    else if (id == 22) //Pokud jsem zvolil nastavování pauzy
     {
         lcd.print(F("Pause time"));
     }
     lcd.setCursor(1, 3);
-    lcd.print(F("Save and Exit"));
+    lcd.print(F("Save and Exit")); //Možnost save and exit na spodku LCD
     lcd.setCursor(1, 1);
-    if (id == 21)
+    if (id == 21) //Pokud jsem zvolil nastavení pomodora, vypíšu na LCD předchozí čas pomodora
     {
         mytime = millis() + pomodoroTime + 1000;
     }
-    else if (id == 22)
+    else if (id == 22) //Pokud jsem zvolil nastavení pauzy, vypíšu na LCD předchozí čas pauzy
     {
         mytime = millis() + pauseTime + 1000;
     }
-    printTime();
+    printTime(); //Vytisknutí času
     lcd.setCursor(1, 2);
-    lcd.print(F("^^"));
+    lcd.print(F("^^")); //Vytisknu stříšky na první pozici (nastavení hodin)
 
-    while (true)
+    while (true) //While loop dokud nezmáčknu tlačítko na exit
     {
         encoder();
-        if (encUp == HIGH)
+        if (encUp == HIGH) //Pokud otočím enkoderem doprava
         {
-            pointer++;
-            // Serial.println("pointer +");
+            pointer++; //Přidám 1 k pointeru
         }
-        else if (encDown == HIGH)
+        else if (encDown == HIGH) //Pokud otočím enkoderem doleva
         {
-            pointer--;
-            // Serial.println("pointer -");
+            pointer--; //Odečtu 1 od pointeru
         }
         else if (enter == HIGH)
         {
-            if (pointer == 9)
+            if (pointer == 9) //Jestli ukazuji pointerem na exit
             {
                 // interval = (setHours*25) + ((setTenMin * 10 + setMin) * 60000) + ((setTenSec * 10 + setSec) * 1000);
-                stav = true;
-                id = 20;
-                // Serial.println(interval);
-                break;
+                stav = true; //nastavím stav na true pro vytisknutí menu
+                id = 20; 
+                break; //Opustím while loop
             }
             else
             {
-                settings();
+                settings(); //Funkce pro samotné nastavování času
             }
         }
 
-        if (pointer > 9)
+        if (pointer > 9) //Pokud je pointer větší než 9, nastavím opět na 1
         {
             pointer = 1;
-            // Serial.println("Pointer 1");
         }
-        else if (pointer < 1)
+        else if (pointer < 1) //Pokud je pointer menší než 1, nastavím opět na 9
         {
             pointer = 9;
-            // Serial.println("Pointer 9");
         }
         // 00:00:00
-        else if (pointer == 2 || pointer == 3 || pointer == 5 || pointer == 6 || pointer == 8)
+        //Potřebuji přeskakovat dvojtečky u času a jelikož ukazuji na 2 znaky zároveň, musí zde být více podmínek
+        else if (pointer == 2 || pointer == 3 || pointer == 5 || pointer == 6 || pointer == 8) 
         {
             pointer++;
         }
-        else if (pointer == 2 && encDown == HIGH || pointer == 5 && encDown == HIGH)
+        else if (pointer == 2 && encDown == HIGH || pointer == 5 && encDown == HIGH) //Proč jsem to tady napsal jinak?
         {
             pointer--;
         }
 
-        if (pointer != pointerPrev)
+        if (pointer != pointerPrev) //Pokud se pointer změnil
         {
-            // Serial.println("Pohnuti");
-            // Serial.println(pointer);
+            //Automaticky přepisuji místo před Exitem, vyhnu se tím if podmínce
             lcd.setCursor(0, 3);
             lcd.print(F(" "));
+            //Vymažu předchozí šipky
             lcd.setCursor(pointerPrev, 2);
             lcd.print(F("  "));
-            if (pointer == 9)
+            if (pointer == 9) //Pokud je pointer roven 9, vypíšu šipku k exitu
             {
                 lcd.setCursor(0, 3);
                 lcd.print(F(">"));
             }
-            else
+            else //Jinak vypisuji stříšky k požadovanému času
             {
                 lcd.setCursor(pointer, 2);
                 lcd.print(F("^^"));
             }
-            pointerPrev = pointer;
+            pointerPrev = pointer; //Zapíšu aktuální místo pointeru do proměnné
         }
     }
-    // Serial.println("Za loopem");
 }
 
 int settings()
 {
-    // Serial.println("Settings");
-    int prevNastav = nastav;
+    int prevNastav = nastav; 
     cas = timeNow;
     switch (pointer)
     {
@@ -673,23 +661,17 @@ int settings()
     while (true)
     {
         unsigned long timeNow = millis();
-        //        Serial.println("Settings");
         encoder();
-        //        Serial.println(cas);
-        //        Serial.println(timeNow);
         if (timeNow - cas >= 1000)
         {
-            //            Serial.println("Millis");
             if (stav == false)
             {
-                //                Serial.println("Blank");
                 lcd.setCursor(pointer, 2);
                 lcd.print(F("  "));
                 stav = !stav;
             }
             else if (stav == true)
             {
-                //                Serial.println("Point");
                 lcd.setCursor(pointer, 2);
                 lcd.print(F("^^"));
                 stav = !stav;
@@ -743,7 +725,6 @@ int settings()
                 Serial.print(":");
                 Serial.println(seconds);
             }
-            // Serial.println(interval);
             lcd.setCursor(pointer, 2);
             lcd.print(F("^^"));
             break;
@@ -791,7 +772,6 @@ int settings()
 
 int pomodoroSettings()
 {
-    // Serial.println("pomodoroSettings");
     int newTarget = 1;
     int prevTarget;
     lcd.clear();
@@ -808,35 +788,29 @@ int pomodoroSettings()
         if (encUp == HIGH)
         {
             newTarget++;
-            // Serial.println("Target +");
         }
         else if (encDown == HIGH)
         {
             newTarget--;
-            // Serial.println("Target -");
         }
         else if (enter == HIGH)
         {
-            // Serial.println("enter");
             target = newTarget;
             EEPROM.write(srepeat, target);
             id = 20;
             stav = true;
-            // Serial.println(id);
             break;
         }
 
         if (newTarget != prevTarget)
         {
             prevTarget = newTarget;
-            // Serial.println("Prepis pocet na lcd");
             lcd.setCursor(16, 2);
             lcd.print(F("   "));
             lcd.setCursor(16, 2);
             lcd.print(newTarget);
         }
     }
-    // Serial.println("Pryc z while loopu");
 }
 
 void printTime()
@@ -882,10 +856,8 @@ void printTime()
 
 void writeStats()
 {
-    // Serial.println("writeStats");
     if (SD.exists("STATS.CSV"))
     {
-        // Serial.println("if sd exists");
         fp_stats = SD.open("STATS.CSV", FILE_WRITE);
         if (fp_stats)
         {
@@ -897,7 +869,6 @@ void writeStats()
             counter -= (minutes * 60);
             seconds = counter;
 
-            //    Serial.println("if fp_stats");
             fp_stats.print(idPomodoro);
             fp_stats.print(",");
             fp_stats.print(hours);
@@ -913,7 +884,6 @@ void writeStats()
         }
         fp_stats.close();
     }
-    // Serial.println("Konec");
 }
 
 void about()
