@@ -1,6 +1,6 @@
 ////////////////////
 //POMODORO MACHINE//
-//  VERSION 0.8   //
+//  VERSION 1.0   //
 //   TOMAS MACH   //
 ////////////////////
 
@@ -78,12 +78,12 @@ byte enter = LOW;
 byte press;
 
 // Pomodoro
-int hours, minutes, seconds;
+byte hours, minutes, seconds;
 long counter, interval;
 long pomodoroTime;
 long pauseTime;
 byte state;
-int target;
+byte target;
 int numPomodoro = 0;
 long mytime;
 
@@ -104,22 +104,10 @@ void setup()
     EEPROM.get(pomSeconds, seconds);
     pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
 
-    Serial.print(hours);
-    Serial.print(":");
-    Serial.print(minutes);
-    Serial.print(":");
-    Serial.println(minutes);
-
     EEPROM.get(pauHours, hours);
     EEPROM.get(pauMinutes, minutes);
     EEPROM.get(pauSeconds, seconds);
     pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-
-    Serial.print(hours);
-    Serial.print(":");
-    Serial.print(minutes);
-    Serial.print(":");
-    Serial.println(minutes);
 
     //Přiřazení pinů pinů na rotačním enkóderu + bzučáku
     pinMode(CLK, INPUT);
@@ -473,7 +461,6 @@ int end()
     idPomodoro++; //Přidám 1 do idPomodoro. Lepší orientace v statistikách
     writeStats(); //Zapsat statistiky
     EEPROM.write(idPom, idPomodoro); //Zapíšu idPomodora do EEPROM, abych pokračoval od původního i po restartu Arduina
-    //Serial.println(idPomodoro);
     numPomodoro = 0; //Nastavím numPomodoro na 0, ať mohu opět spustit pomodoro
     state = !state; //Co kurva dělá state
     id = 1; //Skočím zpátky do menu na pozici č.1 (Pomodoro)
@@ -707,11 +694,6 @@ int settings()
                 EEPROM.write(pomMinutes, minutes);
                 EEPROM.write(pomSeconds, seconds);
                 pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                Serial.print(hours);
-                Serial.print(":");
-                Serial.print(minutes);
-                Serial.print(":");
-                Serial.println(seconds);
             }
             else if (id == 22)
             {
@@ -719,11 +701,6 @@ int settings()
                 EEPROM.write(pauMinutes, minutes);
                 EEPROM.write(pauSeconds, seconds);
                 pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                Serial.print(hours);
-                Serial.print(":");
-                Serial.print(minutes);
-                Serial.print(":");
-                Serial.println(seconds);
             }
             lcd.setCursor(pointer, 2);
             lcd.print(F("^^"));
@@ -805,9 +782,9 @@ int pomodoroSettings()
         if (newTarget != prevTarget)
         {
             prevTarget = newTarget;
-            lcd.setCursor(16, 2);
+            lcd.setCursor(13, 2);
             lcd.print(F("   "));
-            lcd.setCursor(16, 2);
+            lcd.setCursor(13, 2);
             lcd.print(newTarget);
         }
     }
@@ -896,7 +873,7 @@ void about()
     lcd.setCursor(5, 2);
     lcd.print(F("Class: 4EB"));
     lcd.setCursor(4, 3);
-    lcd.print(F("Version: 0.8"));
+    lcd.print(F("Version: 1.0"));
 
     while (true)
     {
