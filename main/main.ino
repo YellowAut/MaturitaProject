@@ -33,19 +33,19 @@ void encoder();         // Reading rotary encoder
 void sampling();        // 1 millis sampling
 void reset();           // Reseting controls
 void menu();            // Menu overwrite
-void odpocet();         // Countdown
+void countdown();       // Countdown
 void pomodoro();        // Pomodoro countdown
 void pause();           // Pause countdown
 void about();           // Info page
 void printTime();       // Time printing on LCD
 void writeStats();      // Writing data to SD card
 int end();              // End screen + writing stats to SD card
-int checkStavu();       // Checking how many pomodoros left
+int stateCheck();       // Checking how many pomodoros left
 int timeSettings();     // Setting pomodoro and pause time
 int settings();         // Actuall setting
 int pomodoroSettings(); // Setting number of settings
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+LiquidCrystal_I2C lcd(0x27, 20, 4); //Inicializace LCD 20×04
 
 // Pomocné proměné, poté vyřešit
 byte stav = false;
@@ -57,7 +57,7 @@ byte idPomodoro;
 int cislo;
 int newTarget;
 int prevTarget;
-unsigned long myTime;
+//unsigned long myTime;
 byte success;
 
 // Menu
@@ -85,7 +85,7 @@ long pauseTime;
 byte state;
 byte target;
 int numPomodoro = 0;
-long mytime;
+unsigned long mytime;
 
 void setup()
 {
@@ -121,9 +121,11 @@ void setup()
     //Inicializace LCD + Startovní nápis + Vypsání menu
     lcd.init();
     lcd.backlight();
-    lcd.setCursor(0, 0);
-    lcd.print("POMODORO");
-    delay(5000);
+    lcd.setCursor(2, 1);
+    lcd.print(F("POMODORO MACHINE"));
+    lcd.setCursor(3,2);
+    lcd.print(F("By Tomas Mach"));
+    delay(5000); //Úvodní strana na 5 vteřin
     lcd.clear();
     lcd.setCursor(1, 0);
     lcd.print(F("Main menu"));
@@ -148,7 +150,7 @@ void setup()
 
 void loop()
 {
-    sampling(); 
+    sampling(); //Zpomalení programu pro lepší funkčnost
     if (tick == HIGH) //Uběhlo 50 millis
     {
         encoder(); //Ovládání menu
@@ -347,7 +349,7 @@ void menu()
         lcd.print(F("Pause length"));
         lcd.setCursor(1, 3);
         lcd.print(F("Back"));
-        stav = false; 
+        stav = false; //Opět hodím stav na false
     }
 }
 
@@ -410,7 +412,7 @@ void encoder()
     prevEnc = actuEnc; //Zapíšu aktuální pozici enkóderu do předchozí pozice enkóderu
 }
 
-void odpocet()
+void countdown()
 {
     while (mytime >= millis()) //Dokud neuběhne potřebný čas, budu odpočítávat a vypisovat čas na LCD
     {
@@ -425,7 +427,7 @@ void odpocet()
         lcd.setCursor(1, 1);
         printTime(); //Printování času na LCD
     }
-    checkStavu(); //Pokud uběhl požadovaný interval času, skočím do checkování stavu
+    stateCheck(); //Pokud uběhl požadovaný interval času, skočím do checkování stavu
 }
 
 void pomodoro()
@@ -438,7 +440,7 @@ void pomodoro()
     numPomodoro++; //Přidám jedničku do numPomodoro, které potom porovnávám s cílem
     state = false; //Nastavím state na false, aby byl další odpočet false
     mytime = millis() + pomodoroTime + 1000; //Přepíšu mytime na požadovaný interval pomodora. + 1 vteřina aby to začlo na požadovaném času
-    odpocet(); //Zapnu odpočet
+    countdown(); //Zapnu odpočet
 }
 
 void pause()
@@ -450,7 +452,7 @@ void pause()
     lcd.print(F(">Exit pause"));
     state = true; //Nastavím state na true, aby byl další odpočet pomodoro
     mytime = millis() + pauseTime + 1000; //Přepíšu mytime na požadovaný interval pauzy. + 1 vteřina aby to začlo na požadovaném čase
-    odpocet(); //zapnu odpočet
+    countdown(); //zapnu odpočet
 }
 
 int end()
@@ -462,12 +464,12 @@ int end()
     writeStats(); //Zapsat statistiky
     EEPROM.write(idPom, idPomodoro); //Zapíšu idPomodora do EEPROM, abych pokračoval od původního i po restartu Arduina
     numPomodoro = 0; //Nastavím numPomodoro na 0, ať mohu opět spustit pomodoro
-    state = !state; //Co kurva dělá state
+    state = !state; //Otočení state, aby další bylo pomodoro
     id = 1; //Skočím zpátky do menu na pozici č.1 (Pomodoro)
     stav = true; //Stav na true aby se mi opět vypsalo menu
 }
 
-int checkStavu()
+int stateCheck()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -790,7 +792,7 @@ int pomodoroSettings()
     }
 }
 
-void printTime()
+void printTime() //Tato část kódu je odsud: https://forum.arduino.cc/t/how-to-display-hh-mm-ss-on-lcd/279405/3
 {
     lcd.setCursor(1, 1);
     counter = (mytime - millis()) / 1000;

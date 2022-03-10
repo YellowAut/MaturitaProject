@@ -1,6 +1,6 @@
-Average duration: 120.71049382716043
-Average repetitions : 7.328282828282828
-Longest success streak: 12
-Success rate: 55.05050505050505
-Longest duration: 239.85
+Average duration in minutes: 115.01
+Average repetitions: 7.66
+Longest success streak: 5
+Success rate: 47.85
+Longest duration: 239.43
 Most repetitions: 15
