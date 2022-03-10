@@ -1,0 +1,14 @@
+Hodit vše do jedné složky
+Dodat obrázky
+Vytisknout vršek krabičky (Již vymodelováno)
+Hodit vše do krabičky
+Dodat obrázky do wordu
+Dát všechny obrázky + videa do složky
+Doupravit výkaz hodin a peněz
+Export eaglu a inventoru
+
+Napájet minimálně piezo bzučák
+Domrdnout textovou část (Janouškova máma)
+
+DONE:
+Dokomentovat kód

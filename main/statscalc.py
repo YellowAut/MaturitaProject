@@ -3,7 +3,7 @@ from dataclasses import dataclass #Class na data, lepší pole
 from datetime import timedelta #Čas
 
 
-@dataclass #Deklarátor dataclassu
+@dataclass #Dekorátor dataclassu
 class Data: #název třídy
     durations: List[timedelta] #Čas
     repetitions: List[int] #int
@@ -87,7 +87,7 @@ def write_to_file(filename: str, stats: Dict[str, int]):
 
 
 INPUT = "stats.csv"
-OUTPUT = "out.txt"
+OUTPUT = "output.txt"
 
 data = parse_data(INPUT)
 stats = analyze_data(data)

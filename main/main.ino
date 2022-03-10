@@ -4,10 +4,10 @@
 //   TOMAS MACH   //
 ////////////////////
 
-#include <LiquidCrystal_I2C.h>
-#include <SD.h>
-#include <SPI.h>
-#include <EEPROM.h>
+#include <LiquidCrystal_I2C.h> // Knihovna pro LCD
+#include <SD.h>                // Knihovna pro čtečku SD karet
+#include <SPI.h>               //Knihovna užívaná společně s SD.h
+#include <EEPROM.h>            //Knihovna pro ukládání nastavovaných dat na Arduino
 
 #define CLK 3
 #define DT 4
@@ -15,7 +15,7 @@
 #define SAMP 50
 #define buzzer 8
 
-// EEPROM adresy
+// EEPROM adresy pro ukládání
 #define idPom 0
 #define srepeat 2
 
@@ -26,24 +26,23 @@
 #define pauMinutes 7
 #define pauSeconds 8
 
-File fp_stats;
-File fp_settings;
+File fp_stats; //Proměnná pro ukládání statistik na SD kartu
 
-void encoder();         // Reading rotary encoder
-void sampling();        // 1 millis sampling
-void reset();           // Reseting controls
-void menu();            // Menu overwrite
-void countdown();       // Countdown
-void pomodoro();        // Pomodoro countdown
-void pause();           // Pause countdown
-void about();           // Info page
-void printTime();       // Time printing on LCD
-void writeStats();      // Writing data to SD card
-int end();              // End screen + writing stats to SD card
-int stateCheck();       // Checking how many pomodoros left
-int timeSettings();     // Setting pomodoro and pause time
-int settings();         // Actuall setting
-int pomodoroSettings(); // Setting number of settings
+void encoder();         // Čtení rotačního enkodéru
+void sampling();        // Sampling na 50 millis
+void reset();           // Resetování ovládání
+void menu();            // Vypsání menu na LCD
+void countdown();       // Odpočet
+void pomodoro();        // Vyvolání pomodora
+void pause();           // Vyvolání pauzy
+void about();           // Vypsání informací
+void printTime();       // Vypisování času na LCD
+void writeStats();      // Zapisování dat na SD kartu
+int end();              // Konečná obrazovka
+int stateCheck();       // Kontrola kolik pomodor zbývá + jestli je další pauza nebo pomodoro
+int timeSettings();     // Nastavování délky pomodora a přestávky
+int settings();         // Nastavování délky pomodora a přestávky
+int pomodoroSettings(); // Nastavovení počtu opakování pomodora
 
 LiquidCrystal_I2C lcd(0x27, 20, 4); //Inicializace LCD 20×04
 
@@ -90,7 +89,7 @@ unsigned long mytime;
 void setup()
 {
     Serial.begin(9600); //Spuštění serialu
-    while (!Serial)
+    while (!Serial) //Vyčkat dokud se nezapne Seriová komunikace
     {
     }
     cas = millis(); //Uložení millis do proměnné cas
@@ -119,9 +118,9 @@ void setup()
     prevEnc = digitalRead(CLK);
 
     //Inicializace LCD + Startovní nápis + Vypsání menu
-    lcd.init();
-    lcd.backlight();
-    lcd.setCursor(2, 1);
+    lcd.init(); //Inicializace LCD
+    lcd.backlight(); //Zapnutí podsvícení LCD
+    lcd.setCursor(2, 1); 
     lcd.print(F("POMODORO MACHINE"));
     lcd.setCursor(3,2);
     lcd.print(F("By Tomas Mach"));
@@ -200,7 +199,7 @@ void loop()
             }
             if (enter)
             {
-                stav = true;
+                stav = true; //Stav na true pro přepsání LCD
                 id = 20;
             }
             break;
@@ -315,7 +314,7 @@ void loop()
                 lcd.print(F(" "));
                 lcd.setCursor(0, 1);
                 lcd.print(F(">"));
-                stav = true;
+                stav = true; //Stav na true pro přepsání LCD
                 id = 1;
             }
             break;
@@ -325,7 +324,7 @@ void loop()
 
 void menu()
 {
-    if (id >= 0 && id <= 3 && stav == true) //Pokud je id 0 až 3 a stav true.
+    if (id >= 0 && id <= 3 && stav == true) //Pokud je id 0 až 3 a stav true, přepiš LCD.
     {
         lcd.clear();
         lcd.setCursor(1, 0);
@@ -338,7 +337,7 @@ void menu()
         lcd.print(F("About"));
         stav = false; //Opět hodím stav na false
     }
-    else if (id >= 20 && id <= 23 && stav == true)
+    else if (id >= 20 && id <= 23 && stav == true) //Pokud je id 20 až 23 a stav true, přepiš LCD.
     {
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -361,7 +360,7 @@ void sampling()
     if (curr_millis - cas >= SAMP) //Zkontroluji, jestli uběhl už SAMP
     {
         tick = HIGH; //Nastavím tick na HIGH a proběhne menu
-        cas = curr_millis; 
+        cas = curr_millis; //Přepíšu millis
     }
     else
     {
@@ -509,12 +508,12 @@ int stateCheck()
                 noTone(buzzer); //Vypnutí bzučení po 250 milisekundách
             }
             stav = !stav;
-            interval = mytime;
+            interval = mytime; //Přepsání millis
         }
         if (enter == HIGH)
         {
-            noTone(buzzer);
-            break;
+            noTone(buzzer); //Vypnutí bzučáku
+            break; 
         }
     }
     if (numPomodoro >= target) //Pokud je počet pomodor splněný (toto se sepne i pokud jsem ukončil předčasně), skočím na end
@@ -525,11 +524,11 @@ int stateCheck()
     {
         if (state == true) //Pokud je state true, začnu odpočet pomodora
         {
-            pomodoro();
+            pomodoro(); //Počátek pomodora
         }
         else if (state == false) //Pokud je state false, začnu odpočet pauzy
         {
-            pause();
+            pause(); //Počátek pauzy
         }
     }
 }
@@ -633,9 +632,9 @@ int timeSettings()
 
 int settings()
 {
-    int prevNastav = nastav; 
-    cas = timeNow;
-    switch (pointer)
+    int prevNastav = nastav; //Proměnná využívaná pro přepisování hodnoty nastavení
+    cas = timeNow; //Přepsání millis
+    switch (pointer) //Nastavujeme hodiny, minuty a nebo vteřiny?
     {
     case 1:
         nastav = hours;
@@ -649,10 +648,11 @@ int settings()
     }
     while (true)
     {
-        unsigned long timeNow = millis();
-        encoder();
+        unsigned long timeNow = millis(); //Přepsání millis
+        encoder(); //Ovládání enkóderu
         if (timeNow - cas >= 1000)
         {
+            //Problikávání šipek každou vteřinu
             if (stav == false)
             {
                 lcd.setCursor(pointer, 2);
@@ -665,19 +665,20 @@ int settings()
                 lcd.print(F("^^"));
                 stav = !stav;
             }
-            cas = timeNow;
+            cas = timeNow; //Přepsání millis
         }
 
         if (encUp)
         {
-            nastav++;
+            nastav++; //Hodiny/minuty/vteřiny +
         }
         else if (encDown)
         {
-            nastav--;
+            nastav--; //Hodiny/minuty/vteřiny -
         }
         else if (enter)
         {
+            //Uložení nastavené hodnoty na správné místo
             switch (pointer)
             {
             case 1:
@@ -690,14 +691,14 @@ int settings()
                 seconds = nastav;
                 break;
             }
-            if (id == 21)
+            if (id == 21) //Uložení nastavené hodnoty do pomodora
             {
                 EEPROM.write(pomHours, hours);
                 EEPROM.write(pomMinutes, minutes);
                 EEPROM.write(pomSeconds, seconds);
                 pomodoroTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
             }
-            else if (id == 22)
+            else if (id == 22) //Uložení nastavené hodnoty do pazy
             {
                 EEPROM.write(pauHours, hours);
                 EEPROM.write(pauMinutes, minutes);
@@ -705,10 +706,10 @@ int settings()
                 pauseTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
             }
             lcd.setCursor(pointer, 2);
-            lcd.print(F("^^"));
+            lcd.print(F("^^")); //Vytisknutí šipek pokud zrovna nebyly zobrazené
             break;
         }
-        if (pointer == 1)
+        if (pointer == 1) //Pokud nastavuji hodiny, mohu nastavovat od 0 do 99
         {
             if (nastav > 99)
             {
@@ -719,7 +720,7 @@ int settings()
                 nastav = 99;
             }
         }
-        else
+        else //Pokud nastavuji minuty/vteřiny, mohu nastavovat od 0 do 59
         {
             if (nastav >= 60)
             {
@@ -731,9 +732,9 @@ int settings()
             }
         }
 
-        if (nastav != prevNastav)
+        if (nastav != prevNastav) //Pokud jsem otočil enkoderem a změnila se hodnota, přepiš starou
         {
-            if (nastav < 10)
+            if (nastav < 10) //Pokud přesáhnu hodnotu 10, napíšu upravím desítky
             {
                 lcd.setCursor(pointer, 1);
                 lcd.print(F("0"));
@@ -744,44 +745,44 @@ int settings()
                 lcd.setCursor(pointer, 1);
                 lcd.print(nastav);
             }
-            prevNastav = nastav;
+            prevNastav = nastav; //Přepsání předešlé hodnoty na stav
         }
     }
 }
 
 int pomodoroSettings()
 {
-    int newTarget = 1;
-    int prevTarget;
+    int newTarget = 1; //Proměnná pro změnu počtu
+    int prevTarget; //Proměnná pro přepisování hodnoty
     lcd.clear();
     lcd.setCursor(0, 1);
     lcd.print(F("Repeats before: "));
-    lcd.print(target);
+    lcd.print(target); //Vypíšu předchozí počet opakování
     lcd.setCursor(0, 2);
     lcd.print(F("Repeats now: "));
-    lcd.print(target);
+    lcd.print(target); //Vypíšu aktuální počet opakování
     while (true)
     {
         encoder();
 
-        if (encUp == HIGH)
+        if (encUp == HIGH) //Pokud otočím doprava, přidám 1 opakování
         {
             newTarget++;
         }
-        else if (encDown == HIGH)
+        else if (encDown == HIGH) //Pokud otočím doleva, uberu 1 opakování
         {
             newTarget--;
         }
-        else if (enter == HIGH)
+        else if (enter == HIGH) //Pokud stisknu enter
         {
-            target = newTarget;
-            EEPROM.write(srepeat, target);
-            id = 20;
-            stav = true;
+            target = newTarget; //Uložím počet opakování
+            EEPROM.write(srepeat, target); //Uložím počet opakování do EEPROM paměti
+            id = 20; //Vrátím se na menu nastavení
+            stav = true; //Vypíšu menu nastavení
             break;
         }
 
-        if (newTarget != prevTarget)
+        if (newTarget != prevTarget) //Pokud se změnila hodnota nastavení, smažu starou a vypíšu novou
         {
             prevTarget = newTarget;
             lcd.setCursor(13, 2);
@@ -795,22 +796,22 @@ int pomodoroSettings()
 void printTime() //Tato část kódu je odsud: https://forum.arduino.cc/t/how-to-display-hh-mm-ss-on-lcd/279405/3
 {
     lcd.setCursor(1, 1);
-    counter = (mytime - millis()) / 1000;
-    hours = counter / 3600;
-    counter -= (hours * 3600);
-    minutes = counter / 60;
-    counter -= (minutes * 60);
-    seconds = counter;
-    if (hours < 10)
+    counter = (mytime - millis()) / 1000; //Vydělím si počet millis 1000
+    hours = counter / 3600; //Pokud chceme dosáhnout hodin, dělíme millis hodnotou 3.600.000. Uložím do hodin
+    counter -= (hours * 3600); //Vynásobím hodnotou 3600
+    minutes = counter / 60; //A poté vydělím 60 pro získání minut
+    counter -= (minutes * 60); //Minuty vynásobím 60 a získám vteřiny
+    seconds = counter; //Uložím vteřiny
+    if (hours < 10) //Pokud je hodin méně než 10, vypíšu pouze jednotky hodin
     {
         lcd.print(F("0"));
         lcd.print(hours);
     }
-    else
+    else //Pokud je víc jak 10, vypíšu i desítky hodin. To stejné se opakuje u minut i vteřin
     {
         lcd.print(hours);
     }
-    lcd.print(F(":"));
+    lcd.print(F(":")); //Mezi hodinami, minutami a vteřinami vypíšu dvojtečku
     if (minutes < 10)
     {
 
@@ -833,13 +834,14 @@ void printTime() //Tato část kódu je odsud: https://forum.arduino.cc/t/how-to
     }
 }
 
-void writeStats()
+void writeStats() //Zapsání statistik na SD kartu
 {
-    if (SD.exists("STATS.CSV"))
+    if (SD.exists("STATS.CSV")) //Pokud existuje stats.csv na SD kartě
     {
-        fp_stats = SD.open("STATS.CSV", FILE_WRITE);
-        if (fp_stats)
+        fp_stats = SD.open("STATS.CSV", FILE_WRITE); //Otevřu soubor v režimu zapisování
+        if (fp_stats) //Pokud je soubor otevřen
         {
+            //Přepočtu millis na hodiny, vteřiny a minuty
             mytime = millis() + pomodoroTime;
             counter = (mytime - millis()) / 1000;
             hours = counter / 3600;
@@ -848,8 +850,9 @@ void writeStats()
             counter -= (minutes * 60);
             seconds = counter;
 
+            //Následně uložím id Pomodora, hodiny, minuty, vteřiny, počet opakování a jestli bylo pomodoro úspěšné
             fp_stats.print(idPomodoro);
-            fp_stats.print(",");
+            fp_stats.print(","); //Mezi každou hodnotou napíšu čárku
             fp_stats.print(hours);
             fp_stats.print(",");
             fp_stats.print(minutes);
@@ -861,11 +864,11 @@ void writeStats()
             fp_stats.println(success);
             fp_stats.close();
         }
-        fp_stats.close();
+        fp_stats.close(); //Zavřu soubor z důvodu šetření paměti a výkonu
     }
 }
 
-void about()
+void about() //Vypsání informací o projektu
 {
     lcd.clear();
     lcd.setCursor(2, 0);
@@ -877,7 +880,7 @@ void about()
     lcd.setCursor(4, 3);
     lcd.print(F("Version: 1.0"));
 
-    while (true)
+    while (true) //Čekám na zmáčknutí tlačítka. Poté vypíšu hlavní menu
     {
         encoder();
         if (enter)
